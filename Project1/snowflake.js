@@ -5,7 +5,7 @@ var gl;
 
 var points = [];
 
-var NumTimesToSubdivide = 5;
+var NumTimesToSubdivide = 1;
 
 window.onload = function init()
 {
@@ -26,8 +26,7 @@ window.onload = function init()
         vec2(  1, -1 )
     ];
 
-    divideTriangle( vertices[0], vertices[1], vertices[2],
-                    NumTimesToSubdivide);
+    divideTriangle( vertices, NumTimesToSubdivide);
 
     //
     //  Configure WebGL
@@ -55,39 +54,75 @@ window.onload = function init()
     render();
 };
 
-function triangle( a, b, c )
+function midP(a, b) { return vec2((a[0]+b[0])/2,(a[1]+b[1])/2);}
+
+function distance(a, b) { return vec2(b[0]-a[0],b[1]-a[1]);}
+
+function getPoint(a, b)
 {
-    points.push( a, b, c );
-}
+    var dx = (b[0] - a[0]);
+    var dy = (b[1] - a[1]);
 
-function divideTriangle( a, b, c, count )
-{
+    var ang = 60;
 
-    // check for end of recursion
-
-    if ( count === 0 ) {
-        triangle( a, b, c );
+    if (dx == 0) {
+        if (dy >= 0)
+            ang = 90;
+        else
+            ang = 270;
     }
     else {
-
-        //bisect the sides
-
-        var ab = mix( a, b, 0.5 );
-        var ac = mix( a, c, 0.5 );
-        var bc = mix( b, c, 0.5 );
-
-        --count;
-
-        // three new triangles
-
-        divideTriangle( a, ab, ac, count );
-        divideTriangle( c, ac, bc, count );
-        divideTriangle( b, bc, ab, count );
+      ang = Math.atan2(dy, dx);
     }
+    var cX = (b[0] - a[0]);// * lineAperture;
+    var cY = (b[1] - a[1]);// * lineAperture;
+    var cSize = Math.sqrt(Math.pow(cX, 2) + Math.pow(cY, 2));
+
+    var np1X = a[0] + cX;
+    var np1Y = a[1] + cY;
+
+    var midPoint = vec2(a[0] + ((b[0] - a[0]) / 2), (a[1] + ((b[1] - a[1]) / 2)));
+
+    var xCom = cSize * Math.sin(ang);
+    var yCom = cSize * Math.cos(ang);
+
+    var dicularPoint = vec2(midPoint[0] + xCom, midPoint[1] - yCom);
+
+    var np3X = b[0] - cX;
+    var np3Y = b[1] - cY;
+
+    //points.push(vec2(), ab1, ab2, ab3);
+    return vec2(dicularPoint);
+}
+
+function divideTriangle( v, count )
+{
+    while(count > 0){
+        //var n = [];
+        for (var i = 0; i <= v.length - 1; i++){
+            //bisect the sides
+            var a = v[i];
+            if (i == v.length - 1) {
+                var b = v[0];
+            }
+            else {
+                var b = v[i + 1];
+            }
+            var ab1 = mix(a, b, 1.0 / 3.0);
+            var ab3 = mix(a, b, 2.0 / 3.0);
+            points.push(a, ab1);
+            var ab2 = getPoint( a , b );
+            points.push(ab2, ab3, b);
+        }
+        points.push(v[v.length - 1]);
+        v = points;
+        --count;
+    }
+//    snowflake(n);
 }
 
 function render()
 {
     gl.clear( gl.COLOR_BUFFER_BIT );
-    gl.drawArrays( gl.TRIANGLES, 0, points.length );
+    gl.drawArrays( gl.LINE_STRIP, 0, points.length );
 }
