@@ -2,10 +2,10 @@
 
 var canvas;
 var gl;
-
+var start = vec2(-1,-1);
 var points = [];
 
-var NumTimesToSubdivide = 1;
+var NumTimesToSubdivide = 2;
 
 window.onload = function init()
 {
@@ -26,7 +26,9 @@ window.onload = function init()
         vec2(  1, -1 )
     ];
 
-    divideTriangle( vertices, NumTimesToSubdivide);
+    divideTriangle( 0.0, 1, NumTimesToSubdivide);
+    divideTriangle( -120.0, 1, NumTimesToSubdivide);
+    divideTriangle( 120.0, 1, NumTimesToSubdivide);
 
     //
     //  Configure WebGL
@@ -54,43 +56,27 @@ window.onload = function init()
     render();
 };
 
-function midP(a, b) { return vec2((a[0]+b[0])/2,(a[1]+b[1])/2);}
-
-function Slope(a, b) { return vec2(b[0]-a[0],b[1]-a[1]);}
-
-function getPoint(a, b)
+function divideTriangle( dir, len, count )
 {
-    var angle = .0174533 * 60;
-    var cx = a[0] + 1 * Math.cos(angle);
-    var cy = a[1] + 1 * Math.sin(angle);
-//    var mid = midP(a, b);
-//    var slope = Slope(a, b);
-//    slope[0]=-slope[0];
-    return vec2(cx,cy);
-
-}
-
-function divideTriangle( v, count )
-{
-    while(count > 0){
-        for (var i = 0; i <= v.length - 1; i++){
-            //bisect the sides
-            var a = v[i];
-            if (i == v.length - 1) {
-                var b = v[0];
-            }
-            else {
-                var b = v[i + 1];
-            }
-            var ab1 = mix(a, b, 1.0 / 3.0);
-            var ab3 = mix(a, b, 2.0 / 3.0);
-            points.push(a, ab1);
-            var ab2 = getPoint( ab1 , ab3 );
-            points.push(ab2, ab3, b);
-        }
-        points.push(v[v.length - 1]);
-        v = points;
-        --count;
+    var dirRad = 0.0174533 * dir;  
+    var newX = start[0] + len * Math.cos(dirRad);
+    var newY = start[1] + len * Math.sin(dirRad);
+    if (count==0) {
+        vec2(start[0], start[1]);
+        vec2(newX, newY);
+        start[0] = newX;
+        start[1] = newY;
+    }
+    else {
+    	count--;
+    	//draw the four parts of the side _/\_ 
+    	divideTriangle(dir, len/3, count);
+	dir += 60.0;
+	divideTriangle(dir, len/3, count);
+	dir -= 120.0;
+	divideTriangle(dir, len/3, count);
+	dir += 60.0;
+	divideTriangle(dir, len/3, count);
     }
 }
 
