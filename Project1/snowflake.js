@@ -58,14 +58,33 @@ window.onload = function init()
 
 function divideTriangle( dir, len, count, prev )
 {
-    var dirRad = 0.0174533 * dir;  
-    var newX = prev[0] + len * Math.cos(dirRad);
-    var newY = prev[1] + len * Math.sin(dirRad);
-    if (count==0) {
-        points.push(prev);
-        start=vec2(newX, newY);
-        points.push(start);
-        return start;//start[1] = newY;
+    var mid = midP(a, b);
+    var slope = Slope(a, b);
+    return vec2(mid[0]-slope[1],mid[1]-slope[0]);
+
+}
+
+function divideTriangle( v, count )
+{
+    while(count > 0){
+        for (var i = 0; i <= v.length - 1; i++){
+            //bisect the sides
+            var a = v[i];
+            if (i == v.length - 1) {
+                var b = v[0];
+            }
+            else {
+                var b = v[i + 1];
+            }
+            var ab1 = mix(a, b, 1.0 / 3.0);
+            var ab3 = mix(a, b, 2.0 / 3.0);
+            points.push(a, ab1);
+            var ab2 = getPoint( ab1 , ab3 );
+            points.push(ab2, ab3, b);
+        }
+        points.push(v[v.length - 1]);
+        v = points;
+        --count;
     }
     else {
     	count--;
