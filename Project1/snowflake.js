@@ -60,9 +60,13 @@ function Slope(a, b) { return vec2(b[0]-a[0],b[1]-a[1]);}
 
 function getPoint(a, b)
 {
-    var mid = midP(a, b);
-    var slope = Slope(a, b);
-    return vec2(mid[0]-slope[1],mid[1]-slope[0]);
+    var angle = .0174533 * 60;
+    var cx = a[0] + 1 * Math.cos(angle);
+    var cy = a[1] + 1 * Math.sin(angle);
+//    var mid = midP(a, b);
+//    var slope = Slope(a, b);
+//    slope[0]=-slope[0];
+    return vec2(cx,cy);
 
 }
 
