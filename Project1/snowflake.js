@@ -5,7 +5,7 @@ var gl;
 var start = vec2(-1,-1);
 var points = [];
 
-var NumTimesToSubdivide = 2;
+var NumTimesToSubdivide = 3;
 
 window.onload = function init()
 {
@@ -62,21 +62,21 @@ function divideTriangle( dir, len, count )
     var newX = start[0] + len * Math.cos(dirRad);
     var newY = start[1] + len * Math.sin(dirRad);
     if (count==0) {
-        vec2(start[0], start[1]);
-        vec2(newX, newY);
-        start[0] = newX;
-        start[1] = newY;
+        points.push(vec2(start[0], start[1]));
+        start=vec2(newX, newY);
+        points.push(start);
+        //start[1] = newY;
     }
     else {
     	count--;
     	//draw the four parts of the side _/\_ 
-    	divideTriangle(dir, len/3, count);
+    	divideTriangle(dir, len/2, count);
 	dir += 60.0;
-	divideTriangle(dir, len/3, count);
+	divideTriangle(dir, len/2, count);
 	dir -= 120.0;
-	divideTriangle(dir, len/3, count);
+	divideTriangle(dir, len/2, count);
 	dir += 60.0;
-	divideTriangle(dir, len/3, count);
+	divideTriangle(dir, len/2, count);	
     }
 }
 
