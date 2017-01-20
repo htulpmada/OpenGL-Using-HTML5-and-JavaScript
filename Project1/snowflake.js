@@ -4,6 +4,11 @@ var canvas;
 var gl;
 var start = vec2(-1,-1);
 var points = [];
+var vertices = [
+    vec2( -1, -1 ),
+    vec2(  0,  1 ),
+    vec2(  1, -1 )
+];
 
 var NumTimesToSubdivide = 3;
 
@@ -20,15 +25,10 @@ window.onload = function init()
 
     // First, initialize the corners of our gasket with three points.
 
-    var vertices = [
-        vec2( -1, -1 ),
-        vec2(  0,  1 ),
-        vec2(  1, -1 )
-    ];
 
-    divideTriangle( 0.0, 1, NumTimesToSubdivide);
-    divideTriangle( -120.0, 1, NumTimesToSubdivide);
-    divideTriangle( 120.0, 1, NumTimesToSubdivide);
+    divideTriangle( 0.0, 1, NumTimesToSubdivide, vertices[0]);
+    divideTriangle( -120.0, 1, NumTimesToSubdivide, vertices[1]);
+    divideTriangle( 120.0, 1, NumTimesToSubdivide, vertices[2]);
 
     //
     //  Configure WebGL
@@ -56,27 +56,28 @@ window.onload = function init()
     render();
 };
 
-function divideTriangle( dir, len, count )
+function divideTriangle( dir, len, count, prev )
 {
     var dirRad = 0.0174533 * dir;  
-    var newX = start[0] + len * Math.cos(dirRad);
-    var newY = start[1] + len * Math.sin(dirRad);
+    var newX = prev[0] + len * Math.cos(dirRad);
+    var newY = prev[1] + len * Math.sin(dirRad);
     if (count==0) {
-        points.push(vec2(start[0], start[1]));
+        points.push(prev);
         start=vec2(newX, newY);
         points.push(start);
-        //start[1] = newY;
+        return start;//start[1] = newY;
     }
     else {
     	count--;
     	//draw the four parts of the side _/\_ 
-    	divideTriangle(dir, len/2, count);
+    	var s = divideTriangle(dir, len/2, count, prev);
 	dir += 60.0;
-	divideTriangle(dir, len/2, count);
+	s = divideTriangle(dir, len/2, count, s);
 	dir -= 120.0;
-	divideTriangle(dir, len/2, count);
+	s = divideTriangle(dir, len/2, count, s);
 	dir += 60.0;
-	divideTriangle(dir, len/2, count);	
+	s = divideTriangle(dir, len/2, count, s);	
+        return s;
     }
 }
 
