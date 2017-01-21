@@ -2,17 +2,18 @@
 
 var canvas;
 var gl;
+
+var x = .7;
+var y = .6;
 var dir = 60;
-var start = vec2(-1,-1);
 var points = [];
 var vertices = [
-    vec2( -1, -1 ),
-    vec2(  0,  1 ),
-    vec2(  1, -1 ),
-    vec2( -1, -1 )
+    vec2( -x, -y ),
+    vec2(  0,  y ),
+    vec2(  x, -y )
 ];
 
-var NumTimesToSubdivide = 1;
+var NumTimesToSubdivide = 6;
 
 window.onload = function init()
 {
@@ -28,10 +29,12 @@ window.onload = function init()
     // First, initialize the corners of our gasket with three points.
 
 
-    divideTriangle( vertices, NumTimesToSubdivide);
+    divideTriangle( vertices[0] , vertices[1], NumTimesToSubdivide-1);
+    divideTriangle( vertices[1] , vertices[2], NumTimesToSubdivide-1);
+    divideTriangle( vertices[2] , vertices[0], NumTimesToSubdivide-1);
 
-    //
-    //  Configure WebGL
+
+    //     Configure WebGL
     //
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 1.0, 1.0, 1.0, 1.0 );
@@ -56,55 +59,47 @@ window.onload = function init()
     render();
 };
 
-function midP(a, b) { return vec2((a[0]+b[0])/2,(a[1]+b[1])/2);} 
+function render()
+{
 
-function Slope(a, b) { return vec2(b[0]-a[0],b[1]-a[1]);}
-function rotate_point(pointX, pointY, originX, originY, angle) {
-	angle = angle * Math.PI / 180.0;
-	return vec2(Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointY-originY) + originX,
-		 Math.sin(angle) * (pointX-originX) + Math.cos(angle) * (pointY-originY) + originY);
+    gl.clear( gl.COLOR_BUFFER_BIT );
+    gl.drawArrays( gl.LINE_LOOP, 0, points.length );
+
 }
-function distance( a , b ){ return Math.sqrt(Math.pow((a[0]+b[0]),2)+(Math.pow((a[1]+b[1]),2)));}
+
+function rotate_point(pointX, pointY, originX, originY, angle) {
+    angle = angle * Math.PI / 180.0;
+    return vec2(
+        Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointY-originY) + originX,
+        Math.sin(angle) * (pointX-originX) + Math.cos(angle) * (pointY-originY) + originY
+                );
+}
+
 function getPoint( a, b )
 {
     return rotate_point(b[0],b[1],a[0],a[1],60);
-    
-   // var d = distance(a,b);
-   // var angle = .0174533 * dir; 
-   // var cx = a[0] + d * Math.cos(angle); 
-   // var cy = a[1] + d * Math.sin(angle); 
-//    var mid = midP(a, b); 
-//    var slope = Slope(a, b); 
-//    slope[0]=-slope[0]; 
-    //return vec2(cx,cy); 
 }
 
-function divideTriangle( v, count )
-{
-    while(count > 0){
-        for (var i = 0; i <= v.length - 2; i++){
-            //bisect the sides
-            var a = v[i];
-//            if (i === v.length - 1) {
-//                var b = v[0];
-//            }
- //           else {
-                var b = v[i + 1];
-//            }
-            var ab1 = mix(a, b, 1.0 / 3.0);
-            var ab3 = mix(a, b, 2.0 / 3.0);
-            points.push(a, ab1);
-            var ab2 = getPoint( ab1 , ab3 );
-            points.push(ab2, ab3, b);
-        }
-//        points.push(v[v.length - 1]);
-        v = points;
-        --count;
+function divideTriangle( a , b , count ){
+    var ab1 = mix(a, b, 1.0 / 3.0);
+    var ab3 = mix(a, b, 2.0 / 3.0);
+    var ab2 = getPoint( ab1 , ab3 );
+
+    points.push(a);
+    if(count===0){points = vertices;}
+    else if(count===1)
+    {
+        points.push(ab1,ab2,ab3);
     }
-}
-
-function render()
-{
-    gl.clear( gl.COLOR_BUFFER_BIT );
-    gl.drawArrays( gl.LINE_STRIP, 0, points.length );
+    else
+    {
+        --count;
+        
+        divideTriangle(a,ab1,count)
+        divideTriangle(ab1,ab2,count)
+        divideTriangle(ab2,ab3,count)
+        divideTriangle(ab3,b,count)
+        
+        points.push(b);
+    }
 }
