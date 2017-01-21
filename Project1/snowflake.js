@@ -4,13 +4,13 @@ var canvas;
 var gl;
 
 var x = .7;
-var y = .6;
+var y = .7;
 var dir = 60;
 var points = [];
 var vertices = [
-    vec2( -x, -y ),
-    vec2(  0,  y ),
-    vec2(  x, -y )
+    vec2( -x, -y + .2 ),
+    vec2(  0,  y + .2 ),
+    vec2(  x, -y + .2 )
 ];
 
 var NumTimesToSubdivide = 6;
