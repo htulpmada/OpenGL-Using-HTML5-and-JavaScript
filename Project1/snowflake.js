@@ -23,10 +23,10 @@ window.onload = function init()
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
     //
-    //  Initialize our data for the Sierpinski Gasket
+    //  Initialize our data for the Snowflake
     //
 
-    // First, initialize the corners of our gasket with three points.
+    // First, initialize the corners of our fractal with three points.
 
 
     divideTriangle( vertices[0] , vertices[1], NumTimesToSubdivide-1);
@@ -63,11 +63,17 @@ function render()
 {
 
     gl.clear( gl.COLOR_BUFFER_BIT );
+
+    // Need to use LINE_LOOP for drawing between points
+
     gl.drawArrays( gl.LINE_LOOP, 0, points.length );
 
 }
 
 function rotate_point(pointX, pointY, originX, originY, angle) {
+
+    // Rotate point around origin given
+
     angle = angle * Math.PI / 180.0;
     return vec2(
         Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointY-originY) + originX,
@@ -77,28 +83,47 @@ function rotate_point(pointX, pointY, originX, originY, angle) {
 
 function getPoint( a, b )
 {
+    // Wrapper for rotate f(x)
+
     return rotate_point(b[0],b[1],a[0],a[1],60);
 }
 
 function divideTriangle( a , b , count ){
+
+    // Split in three
     var ab1 = mix(a, b, 1.0 / 3.0);
     var ab3 = mix(a, b, 2.0 / 3.0);
     var ab2 = getPoint( ab1 , ab3 );
 
+    // Always push first point before recursion
+
     points.push(a);
+
+    // count == 0 means just draw a triangle
+    
     if(count===0){points = vertices;}
+
+    // When recursion is done
+
     else if(count===1)
     {
         points.push(ab1,ab2,ab3);
     }
+
+    // Recurse here
+
     else
     {
         --count;
-        
+	
+	// Recursively call each subPoint
+       
         divideTriangle(a,ab1,count)
         divideTriangle(ab1,ab2,count)
         divideTriangle(ab2,ab3,count)
         divideTriangle(ab3,b,count)
+	
+	// End point push last might make doubles
         
         points.push(b);
     }

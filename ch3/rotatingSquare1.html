@@ -2,20 +2,27 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-<title>CS435, Project #1, Adam Pluth</title>
-
+<title>Rotating Square</title>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;
+uniform float theta;
 
 void
 main()
 {
-    gl_Position = vPosition;
+    float s = sin( theta );
+    float c = cos( theta );
+
+    gl_Position.x = -s * vPosition.y + c * vPosition.x;
+    gl_Position.y =  s * vPosition.x + c * vPosition.y;
+    gl_Position.z = 0.0;
+    gl_Position.w = 1.0;
 }
 </script>
 
 <script id="fragment-shader" type="x-shader/x-fragment">
+
 precision mediump float;
 
 void
@@ -28,8 +35,8 @@ main()
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
-<script type="text/javascript" src="snowflake.js"></script>
-</head>   
+<script type="text/javascript" src="rotatingSquare1.js"></script>
+</head>
 
 <body>
 <canvas id="gl-canvas" width="512" height="512">
