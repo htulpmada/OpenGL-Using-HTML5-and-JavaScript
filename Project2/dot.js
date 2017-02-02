@@ -29,24 +29,29 @@ window.onload = function init() {
 		switch(code){
 			case 82://red
 				selected = 0;
+				canMakeDot = true;
 				break;
 			case 89://yellow
 				selected = 1;
+				canMakeDot = true;
 				break;
 			case 71://green
 				selected = 2;
+				canMakeDot = true;
 				break;
 			case 66://blue
 				selected = 3;
+				canMakeDot = true;
 				break;
 			case 77://magenta
 				selected = 4;
+				canMakeDot = true;
 				break;
 			case 67://cyan
 				selected = 5;
-			break;
+				canMakeDot = true;
+				break;
 		}
-		canMakeDot = true;
     });
 
     document.addEventListener("keyup", function (event) {
@@ -55,12 +60,12 @@ window.onload = function init() {
 		canMakeDot = false;
     });
 
-    canvas.addEventListener("mouseover", function (event) {
-        canvas.focus();
-    });
+	canvas.addEventListener("mouseover", function (event) {
+	    canvas.focus();
+	});
 
     canvas.addEventListener("mousedown", function(event){
-        if(canMakeDot){
+		if(canMakeDot){//make new point
 			gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
 			var t = vec2(2 * event.clientX / canvas.width - 1,
 				2 * (canvas.height - event.clientY) / canvas.height - 1);
@@ -71,10 +76,23 @@ window.onload = function init() {
 			gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, flatten(t));
 			index++;
 		}
+		else{//move point
+			var t = vec2(2 * event.clientX / canvas.width - 1,
+				2 * (canvas.height - event.clientY) / canvas.height - 1);
+			//var i = findPoint(t,vBuffer);
+		}
+	});
 
-    } );
+	canvas.addEventListener("contextmenu", function (event) {
+        //delete points on right click
 
+		//var i = findPoint(t,vBuffer);
 
+		//copy buffer minus buffer[i]
+
+		//rebind buffer
+
+	});
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 0.5, 0.5, 0.5, 1.0 );
@@ -107,6 +125,15 @@ window.onload = function init() {
 
 }
 
+function findPoint( p , arr ){
+	for(var i=0; i<=arr.length; i++){
+		if(p===arr[i]){
+			console.log("found it: " + arr[i]);
+			return i;
+		}
+	}
+	return -1;
+}
 
 function render() {
 
