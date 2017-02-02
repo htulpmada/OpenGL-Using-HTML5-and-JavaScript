@@ -2,20 +2,19 @@
 
 var canvas;
 var gl;
-
-var selected = 0;
+var code;
+var selected = -1;
 var maxNumTriangles = 200;
 var maxNumVertices  = 3 * maxNumTriangles;
 var index = 0;
 var canMakeDot = false;
 var colors = [
-    // white
-    vec4( 1.0, 0.0, 0.0, 1.0 ),  // red
-    vec4( 1.0, 1.0, 0.0, 1.0 ),  // yellow
-    vec4( 0.0, 1.0, 0.0, 1.0 ),  // green
-    vec4( 0.0, 0.0, 1.0, 1.0 ),  // blue
-    vec4( 1.0, 0.0, 1.0, 1.0 ),  // magenta
-    vec4( 0.0, 1.0, 1.0, 1.0 )   // cyan
+    vec4( 1.0, 0.0, 0.0, 1.0 ),  // red 82
+    vec4( 1.0, 1.0, 0.0, 1.0 ),  // yellow 89
+    vec4( 0.0, 1.0, 0.0, 1.0 ),  // green 71
+    vec4( 0.0, 0.0, 1.0, 1.0 ),  // blue 66
+    vec4( 1.0, 0.0, 1.0, 1.0 ),  // magenta 77
+    vec4( 0.0, 1.0, 1.0, 1.0 )   // cyan 67
 ];
 
 
@@ -25,26 +24,56 @@ window.onload = function init() {
     gl = WebGLUtils.setupWebGL( canvas );
     if ( !gl ) { alert( "WebGL isn't available" ); }
 
-    //canvas.addEventListener("mousedown", function(){
-    canvas.addEventListener("keydown", function(event){
-        //canvas.addEventListener("mousedown", function (event) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-            var t = vec2(2 * event.clientX / canvas.width - 1,
-                2 * (canvas.height - event.clientY) / canvas.height - 1);
-            gl.bufferSubData(gl.ARRAY_BUFFER, 8 * index, flatten(t));
+    document.addEventListener("keydown", function (event) {
+        code = event.keyCode;
+		switch(code){
+			case 82://red
+				selected = 0;
+				break;
+			case 89://yellow
+				selected = 1;
+				break;
+			case 71://green
+				selected = 2;
+				break;
+			case 66://blue
+				selected = 3;
+				break;
+			case 77://magenta
+				selected = 4;
+				break;
+			case 67://cyan
+				selected = 5;
+			break;
+		}
+		canMakeDot = true;
+    });
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-            t = vec4(colors[selected]);
-            gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, flatten(t));
-            index++;
-        //});
+    document.addEventListener("keyup", function (event) {
+        //alert('keycode: '+code);
+		console.log(code);
+		canMakeDot = false;
+    });
+
+    canvas.addEventListener("mouseover", function (event) {
+        canvas.focus();
+    });
+
+    canvas.addEventListener("mousedown", function(event){
+        if(canMakeDot){
+			gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+			var t = vec2(2 * event.clientX / canvas.width - 1,
+				2 * (canvas.height - event.clientY) / canvas.height - 1);
+			gl.bufferSubData(gl.ARRAY_BUFFER, 8 * index, flatten(t));
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+			t = vec4(colors[selected]);
+			gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, flatten(t));
+			index++;
+		}
+
     } );
 
-    
-
-    canvas.addEventListener("keyup", function (event) {
-        canMakeDot = false;
-    });
 
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
