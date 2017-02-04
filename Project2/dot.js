@@ -7,6 +7,7 @@ var selected = -1;
 var maxNumTriangles = 200;
 var maxNumVertices  = 3 * maxNumTriangles;
 var index = 0;
+var t;
 var canMakeDot = false;
 var dotArr = [];
 var dotCols = [];
@@ -41,14 +42,38 @@ window.onload = function init() {
 	    canvas.focus();
 	});
 
+	canvas.addEventListener("mouseup", function (event) {
+//	    dotArr[index]=t;
+		index=-1;
+	});
+
+	canvas.addEventListener("mousemove", function (event) {
+			t = vec2(2 * event.clientX / canvas.width - 1,
+				2 * (canvas.height - event.clientY) / canvas.height - 1);
+			//index = findPoint(t);
+			if(index >= 0 && !canMakeDot){
+				gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
+				gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
+				gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
+				gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
+			    dotArr[index]=t;
+			}	    
+	});
+
     canvas.addEventListener("mousedown", function(event){
 		if(canMakeDot){//make new point
 			makeDot(vBuffer,cBuffer);
 		}
 		else{//move point
-			var t = vec2(2 * event.clientX / canvas.width - 1,
+			t = vec2(2 * event.clientX / canvas.width - 1,
 				2 * (canvas.height - event.clientY) / canvas.height - 1);
-			var i = findPoint(t);
+			index = findPoint(t);
+			if(index >= 0){
+				gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
+				gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
+				gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
+				gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
+			}
 	// deletes needs to drag now
 //			clearDot(vBuffer,cBuffer);
 //			makeDot(vBuffer,cBuffer);
@@ -56,8 +81,10 @@ window.onload = function init() {
 	});
 
 	canvas.addEventListener("contextmenu", function (event) {
-        //delete points on right click
+        //prevent default behavior
 
+		//delete points on right click
+		
 		//var i = findPoint(t);
 
 		//copy buffer minus buffer[i]
@@ -108,7 +135,7 @@ function render() {
 
 function makeDot(vBuffer,cBuffer){
 
-	var t = vec2(2 * event.clientX / canvas.width - 1,
+	t = vec2(2 * event.clientX / canvas.width - 1,
 		2 * (canvas.height - event.clientY) / canvas.height - 1);
 	dotArr.push(t);
 	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
@@ -151,20 +178,14 @@ function findPoint( p1 ){
 	var maxDist = .075;
 	for(var i=0; i < dotArr.length; i++){
 		var p2 = dotArr[i];
-		var x1 = p1[0];
-		var x2 = p2[0];
-		var y1 = p1[1];
-		var y2 = p2[1];
-		var xx = x1 - x2;
-		var yy = y1 - y2;
-		if((Math.abs(x1 - x2) < maxDist) 
-			&& (Math.abs(y1 - y2) < maxDist))
+		if((Math.abs(p1[0] - p2[0]) < maxDist) 
+			&& (Math.abs(p1[1] - p2[1]) < maxDist))
 			{
-//			alert("found it: " + dotArr[i]);
-			dotArr.splice(i,1);
-			dotCols.splice(i,1);
-			gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
-			gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
+//			alert("found it: " + i);
+			//dotArr.splice(i,1);
+			//dotCols.splice(i,1);
+			//gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
+			//gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
 //			clearDot();
 			return i;
 		}
