@@ -79,14 +79,14 @@ window.onload = function init() {
 		else{//move point
 			var t = vec2(2 * event.clientX / canvas.width - 1,
 				2 * (canvas.height - event.clientY) / canvas.height - 1);
-			//var i = findPoint(t,vBuffer);
+			var i = findPoint(t,gl.ARRAY_BUFFER);
 		}
 	});
 
 	canvas.addEventListener("contextmenu", function (event) {
         //delete points on right click
 
-		//var i = findPoint(t,vBuffer);
+		var i = findPoint(t,vBuffer);
 
 		//copy buffer minus buffer[i]
 
@@ -126,9 +126,12 @@ window.onload = function init() {
 }
 
 function findPoint( p , arr ){
+	var maxDist = 1e-5;
 	for(var i=0; i<=arr.length; i++){
-		if(p===arr[i]){
-			console.log("found it: " + arr[i]);
+		if((Math.abs(p[0] - arr[i][0]) < maxDist) 
+			&& (Math.abs(p[1] - arr[i][1]) < maxDist))
+			{
+			alert("found it: " + arr[i]);
 			return i;
 		}
 	}
