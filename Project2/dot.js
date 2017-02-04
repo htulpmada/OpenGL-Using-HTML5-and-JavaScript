@@ -6,9 +6,10 @@ var code;
 var selected = -1;
 var maxNumTriangles = 200;
 var maxNumVertices  = 3 * maxNumTriangles;
-var index = 0;
+var index = -1;
 var t;
 var canMakeDot = false;
+var rightClick = false;
 var dotArr = [];
 var dotCols = [];
 var colors = [
@@ -44,6 +45,7 @@ window.onload = function init() {
 
 	canvas.addEventListener("mouseup", function (event) {
 //	    dotArr[index]=t;
+		rightClick = false;
 		index=-1;
 	});
 
@@ -51,7 +53,7 @@ window.onload = function init() {
 			t = vec2(2 * event.clientX / canvas.width - 1,
 				2 * (canvas.height - event.clientY) / canvas.height - 1);
 			//index = findPoint(t);
-			if(index >= 0 && !canMakeDot){
+			if(index >= 0 && !canMakeDot && !rightClick){
 				gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
 				gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
 				gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
@@ -61,27 +63,44 @@ window.onload = function init() {
 	});
 
     canvas.addEventListener("mousedown", function(event){
+		t = vec2(2 * event.clientX / canvas.width - 1,
+				2 * (canvas.height - event.clientY) / canvas.height - 1);
+		index = findPoint(t);
 		if(canMakeDot){//make new point
 			makeDot(vBuffer,cBuffer);
+			index = findPoint(t);
 		}
 		else{//move point
-			t = vec2(2 * event.clientX / canvas.width - 1,
-				2 * (canvas.height - event.clientY) / canvas.height - 1);
-			index = findPoint(t);
-			if(index >= 0){
+		//	index = findPoint(t);
+			if(index >= 0 && !rightClick){
 				gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
 				gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
 				gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
 				gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
 			}
-	// deletes needs to drag now
-//			clearDot(vBuffer,cBuffer);
-//			makeDot(vBuffer,cBuffer);
 		}
 	});
 
 	canvas.addEventListener("contextmenu", function (event) {
         //prevent default behavior
+		event.preventDefault();
+		rightClick = true;
+
+		t = vec2(2 * event.clientX / canvas.width - 1,
+				2 * (canvas.height - event.clientY) / canvas.height - 1);
+		index = findPoint(t);
+
+		if(rightClick && index >=0){
+			index = findPoint(t);
+			dotArr.splice(index,1);
+			dotCols.splice(index,1);
+			index=-1;	
+		}
+		//rightClick = false;
+		gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+		gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
+		gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+		gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
 
 		//delete points on right click
 		
