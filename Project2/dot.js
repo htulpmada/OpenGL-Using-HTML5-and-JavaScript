@@ -34,7 +34,6 @@ window.onload = function init() {
     });
 
     document.addEventListener("keyup", function (event) {
-        // clear selected color
 		console.log(code);
 		canMakeDot = false;
     });
@@ -44,30 +43,26 @@ window.onload = function init() {
 	});
 
 	canvas.addEventListener("mouseup", function (event) {
-//	    dotArr[index]=t;
 		rightClick = false;
 		index=-1;
 	});
 
 	canvas.addEventListener("mousemove", function (event) {
-			t = vec2(2 * event.clientX / canvas.width - 1,
-				2 * (canvas.height - event.clientY) / canvas.height - 1);
-			//index = findPoint(t);
-			if(index >= 0 && !canMakeDot && !rightClick){
-				gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
-				gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
-				gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
-				gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
-			    dotArr[index]=t;
-			}	    
+	    t = getPoint(event);
+	    if(index >= 0 && !canMakeDot && !rightClick){
+			gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
+			gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
+			gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
+			gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
+		    dotArr[index]=t;
+		}	    
 	});
 
     canvas.addEventListener("mousedown", function(event){
-		t = vec2(2 * event.clientX / canvas.width - 1,
-				2 * (canvas.height - event.clientY) / canvas.height - 1);
-		index = findPoint(t);
+        t = getPoint(event);
+        index = findPoint(t);
 		if(canMakeDot){//make new point
-			makeDot(vBuffer,cBuffer);
+			makeDot(vBuffer,cBuffer,event);
 			index = findPoint(t);
 		}
 		else{//move point
@@ -85,30 +80,22 @@ window.onload = function init() {
         //prevent default behavior
 		event.preventDefault();
 		rightClick = true;
+		t = getPoint(event);
 
-		t = vec2(2 * event.clientX / canvas.width - 1,
-				2 * (canvas.height - event.clientY) / canvas.height - 1);
 		index = findPoint(t);
-
 		if(rightClick && index >=0){
-			index = findPoint(t);
+		    // removing point from array
+		    index = findPoint(t);
 			dotArr.splice(index,1);
 			dotCols.splice(index,1);
 			index=-1;	
 		}
-		//rightClick = false;
+
+		// redraw 
 		gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
 		gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
 		gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
 		gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
-
-		//delete points on right click
-		
-		//var i = findPoint(t);
-
-		//copy buffer minus buffer[i]
-
-		//rebind buffer
 
 	});
 
@@ -119,7 +106,7 @@ window.onload = function init() {
     //
     //  Load shaders and initialize attribute buffers
     //
-    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
+    var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram( program );
 
 
@@ -152,26 +139,22 @@ function render() {
 
 }
 
-function makeDot(vBuffer,cBuffer){
+function makeDot(vBuffer,cBuffer,event){
+    t = getPoint(event);
 
-	t = vec2(2 * event.clientX / canvas.width - 1,
-		2 * (canvas.height - event.clientY) / canvas.height - 1);
-	dotArr.push(t);
+    dotArr.push(t);
 	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
-//	gl.bufferSubData(gl.ARRAY_BUFFER, 8 * index, flatten(t));
 
 	t = vec4(colors[selected]);
 	dotCols.push(t);
 	gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
-//	gl.bufferSubData(gl.ARRAY_BUFFER, 16 * index, flatten(t));
-	index++;
+
+    index++;
 }
 
 function clearDot(vBuffer,cBuffer){
-//    var program = initShaders( gl, "vertex-shader", "fragment-shader" );
-//    gl.useProgram( program );
 
     vBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
@@ -194,18 +177,14 @@ function clearDot(vBuffer,cBuffer){
 }
 
 function findPoint( p1 ){
-	var maxDist = .075;
+    // max click distance away from point
+    var maxDist = .05;
 	for(var i=0; i < dotArr.length; i++){
 		var p2 = dotArr[i];
 		if((Math.abs(p1[0] - p2[0]) < maxDist) 
 			&& (Math.abs(p1[1] - p2[1]) < maxDist))
-			{
-//			alert("found it: " + i);
-			//dotArr.splice(i,1);
-			//dotCols.splice(i,1);
-			//gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
-			//gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
-//			clearDot();
+		{
+            // return index of point if found
 			return i;
 		}
 	}
@@ -240,4 +219,15 @@ function pickKey(event){
 				canMakeDot = true;
 				break;
 		}
+}
+
+function getPoint(event)
+{   //need to change to offset canvas
+    var x = event.pageX - canvas.offsetLeft;
+    var y = event.pageY - canvas.offsetTop;
+    return vec2(2 * x / canvas.width - 1, 2 * (canvas.height - y) / canvas.height - 1);
+
+    //VVVVVVVVVV doesnt take offset into account VVVVVVVVVVV DON'T USE!!!
+    //return vec2(2 * event.clientX / canvas.width - 1,
+	//	2 * (canvas.height - event.clientY) / canvas.height - 1);
 }
