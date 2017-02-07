@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 
 <head>
@@ -8,7 +8,7 @@
 
 attribute vec4 vPosition;
 attribute vec4 vColor;
-
+uniform float vSize;
 varying vec4 fColor;
 
 void
@@ -16,7 +16,7 @@ main()
 {
     gl_Position = vPosition;
     fColor = vColor;
-    gl_PointSize = 10.0;
+    gl_PointSize = vSize;
 }
 </script>
 

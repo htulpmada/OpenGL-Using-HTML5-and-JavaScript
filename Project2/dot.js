@@ -1,3 +1,10 @@
+//////////////////
+//  CS 435      //
+//  Project #2  //
+//  Adam Pluth  //
+//  2/7/2017    //
+//////////////////
+
 "use strict";
 
 var canvas;
@@ -5,9 +12,13 @@ var gl;
 var code;
 var selected = -1;
 var maxNumTriangles = 200;
-var maxNumVertices  = 3 * maxNumTriangles;
+var maxNumVertices = 3 * maxNumTriangles;
+var pSize = 5;
+var vSize = 5;
 var index = -1;
 var t;
+// max click distance away from point
+var maxDist = .05;
 var canMakeDot = false;
 var rightClick = false;
 var dotArr = [];
@@ -124,7 +135,9 @@ window.onload = function init() {
 
     var vColor = gl.getAttribLocation( program, "vColor" );
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
-    gl.enableVertexAttribArray( vColor );
+    gl.enableVertexAttribArray(vColor);
+
+    pSize = gl.getUniformLocation(program, "vSize");
 
     render();
 
@@ -132,7 +145,8 @@ window.onload = function init() {
 
 function render() {
 
-    gl.clear( gl.COLOR_BUFFER_BIT );
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.uniform1f(pSize, vSize);
     gl.drawArrays( gl.POINTS, 0, dotArr.length );
 
     window.requestAnimFrame(render);
@@ -177,9 +191,7 @@ function clearDot(vBuffer,cBuffer){
 }
 
 function findPoint( p1 ){
-    // max click distance away from point
-    var maxDist = .05;
-	for(var i=0; i < dotArr.length; i++){
+    for(var i=0; i < dotArr.length; i++){
 		var p2 = dotArr[i];
 		if((Math.abs(p1[0] - p2[0]) < maxDist) 
 			&& (Math.abs(p1[1] - p2[1]) < maxDist))
