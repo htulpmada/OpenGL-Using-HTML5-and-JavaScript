@@ -7,10 +7,12 @@
 
 "use strict";
 
+var radius = .025;
 var canvas;
 var gl;
 var code;
 var selected = -1;
+var numOfTris = 5;
 var maxNumTriangles = 200;
 var maxNumVertices = 3 * maxNumTriangles;
 var pSize = 5;
@@ -25,7 +27,7 @@ var dotArr = [];
 var dotCols = [];
 var colors = [
     vec4( 1.0, 0.0, 0.0, 1.0 ),  // red 82
-    vec4( 1.0, 1.0, 0.0, 1.0 ),  // yellow 89
+    vec4( 1.0, 1.0, 0.0, 1.0 ),  // yellow 89r
     vec4( 0.0, 1.0, 0.0, 1.0 ),  // green 71
     vec4( 0.0, 0.0, 1.0, 1.0 ),  // blue 66
     vec4( 1.0, 0.0, 1.0, 1.0 ),  // magenta 77
@@ -62,12 +64,21 @@ window.onload = function init() {
 	    t = getPoint(event);
 	    if(index >= 0 && !canMakeDot && !rightClick){
 			gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
-			gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
+			gl.bufferSubData(gl.ARRAY_BUFFER, 8*index*(numOfTris+1), flatten(t));
+			//gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
 			gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
-			gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
-		    dotArr[index]=t;
-		}	    
-	});
+			gl.bufferSubData(gl.ARRAY_BUFFER, 16*index*(numOfTris+1), flatten(dotCols[index]));
+			//gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
+                        var origin = new vec2(t[0],t[1]);
+                        t[0] += radius;
+                        dotArr[index]=origin;
+                        for(var i = 1; i <= numOfTris; i++){
+                            dotArr[index+i]=t;
+                            t = rotate(t,origin, 360/numOfTris);
+			}
+                        dotArr[index+numOfTris+1]=t;
+            }
+        });
 
     canvas.addEventListener("mousedown", function(event){
         t = getPoint(event);
@@ -97,9 +108,9 @@ window.onload = function init() {
 		if(rightClick && index >=0){
 		    // removing point from array
 		    index = findPoint(t);
-			dotArr.splice(index,1);
-			dotCols.splice(index,1);
-			index=-1;	
+			dotArr.splice(index,numOfTris+1);// cut off all points of triangle fan
+			dotCols.splice(index,numOfTris+1);
+			index = -1;	
 		}
 
 		// redraw 
@@ -147,25 +158,54 @@ function render() {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform1f(pSize, vSize);
-    gl.drawArrays( gl.POINTS, 0, dotArr.length );
+    //gl.drawArrays( gl.POINTS, 0, dotArr.length );
+    
+    for(var i = 0; i <= dotArr.length; i+=numOfTris+1){
+        gl.drawArrays( gl.TRIANGLE_FAN, i, numOfTris+1);
+    }
 
     window.requestAnimFrame(render);
 
 }
 
+function rotate(point, origin, angle) {
+    var pointX = point[0];
+    var pointY = point[1];
+    var originX = origin[0];
+    var originY = origin[1];
+    // Rotate point around origin given
+
+    angle = angle * Math.PI / 180.0;
+    return vec2(
+        Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointY-originY) + originX,
+        Math.sin(angle) * (pointX-originX) + Math.cos(angle) * (pointY-originY) + originY
+                );
+}
+
+
 function makeDot(vBuffer,cBuffer,event){
     t = getPoint(event);
-
-    dotArr.push(t);
-	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    var origin = new vec2(t[0],t[1]);
+    dotArr.push(origin);
+    t[0] += radius;
+    for(var i = 1; i <= numOfTris; i++){
+        dotArr.push(t);
+        t = rotate(t,origin, 360/(numOfTris-1));
+    }
+//    dotArr.push(t);
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
 
-	t = vec4(colors[selected]);
-	dotCols.push(t);
-	gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+    t = vec4(colors[selected]);
+    // once for the origin
+    for(var i = 0; i <= numOfTris; i++){
+        dotCols.push(t);
+    }
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
-
-    index++;
+    // index should be origin of dot
+    index=dotArr.length - numOfTris + 1;
 }
 
 function clearDot(vBuffer,cBuffer){
@@ -187,11 +227,11 @@ function clearDot(vBuffer,cBuffer){
     gl.enableVertexAttribArray( vColor );
 
 
-	index--;
+	index-=numOfTris+1;
 }
 
 function findPoint( p1 ){
-    for(var i=0; i < dotArr.length; i++){
+    for(var i=0; i < dotArr.length; i+=numOfTris+1){
 		var p2 = dotArr[i];
 		if((Math.abs(p1[0] - p2[0]) < maxDist) 
 			&& (Math.abs(p1[1] - p2[1]) < maxDist))
@@ -233,8 +273,8 @@ function pickKey(event){
 		}
 }
 
-function getPoint(event)
-{   //need to change to offset canvas
+function getPoint(event){   
+    //need to change to offset canvas
     var x = event.pageX - canvas.offsetLeft;
     var y = event.pageY - canvas.offsetTop;
     return vec2(2 * x / canvas.width - 1, 2 * (canvas.height - y) / canvas.height - 1);
