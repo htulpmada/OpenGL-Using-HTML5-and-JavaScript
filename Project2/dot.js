@@ -2,7 +2,8 @@
 //  CS 435      //
 //  Project #2  //
 //  Adam Pluth  //
-//  2/7/2017    //
+//  2/7/2017 -  //
+//  2/12/2017   //
 //////////////////
 
 "use strict";
@@ -13,7 +14,7 @@ var gl;
 var t;
 
 // max click distance away from point <Accuracy>
-var maxDist = .025;
+var maxDist = .05;
 
 var radius = .025;
 var index = -1;
