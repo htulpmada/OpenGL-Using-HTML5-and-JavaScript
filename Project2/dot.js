@@ -7,24 +7,25 @@
 
 "use strict";
 
-var radius = .025;
 var canvas;
-var gl;
 var code;
+var gl;
+var t;
+
+// max click distance away from point <Accuracy>
+var maxDist = .025;
+
+var radius = .025;
+var index = -1;
 var selected = -1;
-var numOfTris = 5;
+var numOfTris = 10;
 var maxNumTriangles = 200;
 var maxNumVertices = 3 * maxNumTriangles;
-var pSize = 5;
-var vSize = 5;
-var index = -1;
-var t;
-// max click distance away from point
-var maxDist = .05;
 var canMakeDot = false;
 var rightClick = false;
-var dotArr = [];
+var canDrag = false;
 var dotCols = [];
+var dotArr = [];
 var colors = [
     vec4( 1.0, 0.0, 0.0, 1.0 ),  // red 82
     vec4( 1.0, 1.0, 0.0, 1.0 ),  // yellow 89r
@@ -57,26 +58,13 @@ window.onload = function init() {
 
 	canvas.addEventListener("mouseup", function (event) {
 		rightClick = false;
+                canDrag = false;
 		index=-1;
 	});
 
 	canvas.addEventListener("mousemove", function (event) {
-	    t = getPoint(event);
-	    if(index >= 0 && !canMakeDot && !rightClick){
-			gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
-			gl.bufferSubData(gl.ARRAY_BUFFER, 8*index*(numOfTris+1), flatten(t));
-			//gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
-			gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
-			gl.bufferSubData(gl.ARRAY_BUFFER, 16*index*(numOfTris+1), flatten(dotCols[index]));
-			//gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
-                        var origin = new vec2(t[0],t[1]);
-                        t[0] += radius;
-                        dotArr[index]=origin;
-                        for(var i = 1; i <= numOfTris; i++){
-                            dotArr[index+i]=t;
-                            t = rotate(t,origin, 360/numOfTris);
-			}
-                        dotArr[index+numOfTris+1]=t;
+	    if(canDrag){
+                drag(event,vBuffer,cBuffer);
             }
         });
 
@@ -88,38 +76,32 @@ window.onload = function init() {
 			index = findPoint(t);
 		}
 		else{//move point
-		//	index = findPoint(t);
-			if(index >= 0 && !rightClick){
-				gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
-				gl.bufferSubData(gl.ARRAY_BUFFER, 8*index, flatten(t));
-				gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer);
-				gl.bufferSubData(gl.ARRAY_BUFFER, 16*(index), flatten(dotCols[index]));
-			}
+                    if(index >= 0 && !rightClick){
+                        canDrag = true;
+                    }
 		}
 	});
 
 	canvas.addEventListener("contextmenu", function (event) {
-        //prevent default behavior
-		event.preventDefault();
-		rightClick = true;
-		t = getPoint(event);
+            //prevent default behavior
+            event.preventDefault();
+            rightClick = true;
+            t = getPoint(event);
+            index = findPoint(t);
+            if(rightClick && index >=0){
+                // removing point from array
+                index = findPoint(t);
+                dotArr.splice(index,numOfTris+1);// cut off all points of triangle fan
+                dotCols.splice(index,numOfTris+1);
+                index = -1;	
+            }
 
-		index = findPoint(t);
-		if(rightClick && index >=0){
-		    // removing point from array
-		    index = findPoint(t);
-			dotArr.splice(index,numOfTris+1);// cut off all points of triangle fan
-			dotCols.splice(index,numOfTris+1);
-			index = -1;	
-		}
-
-		// redraw 
-		gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
-		gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
-		gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
-		gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
-
-	});
+	// redraw 
+	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+	gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
+	gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
+	gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
+        });
 
     gl.viewport( 0, 0, canvas.width, canvas.height );
     gl.clearColor( 0.5, 0.5, 0.5, 1.0 );
@@ -128,9 +110,9 @@ window.onload = function init() {
     //
     //  Load shaders and initialize attribute buffers
     //
+
     var program = initShaders(gl, "vertex-shader", "fragment-shader");
     gl.useProgram( program );
-
 
     var vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
@@ -148,8 +130,6 @@ window.onload = function init() {
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray(vColor);
 
-    pSize = gl.getUniformLocation(program, "vSize");
-
     render();
 
 }
@@ -157,9 +137,7 @@ window.onload = function init() {
 function render() {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.uniform1f(pSize, vSize);
-    //gl.drawArrays( gl.POINTS, 0, dotArr.length );
-    
+
     for(var i = 0; i <= dotArr.length; i+=numOfTris+1){
         gl.drawArrays( gl.TRIANGLE_FAN, i, numOfTris+1);
     }
@@ -168,13 +146,31 @@ function render() {
 
 }
 
+function drag(event,vBuffer,cBuffer){
+    t = getPoint(event);
+    // find t
+    index = findPoint(t);
+    if(index >= 0 && !canMakeDot && !rightClick){
+        var origin = new vec2(t[0],t[1]);
+        t[0] += radius;
+        dotArr[index]=origin;
+        var i = 1;
+        for( ; i < numOfTris; i++){
+            dotArr[index+i]=t;
+            t = rotate(t,origin, 360/(numOfTris-1));
+        }
+        dotArr[index+i]=t;
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
+        gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
+    }
+}
+
 function rotate(point, origin, angle) {
     var pointX = point[0];
     var pointY = point[1];
     var originX = origin[0];
     var originY = origin[1];
     // Rotate point around origin given
-
     angle = angle * Math.PI / 180.0;
     return vec2(
         Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointY-originY) + originX,
@@ -182,34 +178,37 @@ function rotate(point, origin, angle) {
                 );
 }
 
-
 function makeDot(vBuffer,cBuffer,event){
     t = getPoint(event);
+    //first point of triangle fan
     var origin = new vec2(t[0],t[1]);
     dotArr.push(origin);
+    
+    //first point of circle
     t[0] += radius;
+    
     for(var i = 1; i <= numOfTris; i++){
         dotArr.push(t);
         t = rotate(t,origin, 360/(numOfTris-1));
     }
-//    dotArr.push(t);
+
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
 
     t = vec4(colors[selected]);
-    // once for the origin
     for(var i = 0; i <= numOfTris; i++){
         dotCols.push(t);
     }
     
     gl.bindBuffer(gl.ARRAY_BUFFER, cBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(dotCols), gl.STATIC_DRAW );
+
     // index should be origin of dot
     index=dotArr.length - numOfTris + 1;
 }
 
 function clearDot(vBuffer,cBuffer){
-
+    // clear and reset buffers
     vBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
 	gl.bufferData( gl.ARRAY_BUFFER, flatten(dotArr), gl.STATIC_DRAW );
@@ -226,21 +225,21 @@ function clearDot(vBuffer,cBuffer){
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor );
 
-
-	index-=numOfTris+1;
+    index-=numOfTris+1;
 }
 
 function findPoint( p1 ){
     for(var i=0; i < dotArr.length; i+=numOfTris+1){
-		var p2 = dotArr[i];
-		if((Math.abs(p1[0] - p2[0]) < maxDist) 
-			&& (Math.abs(p1[1] - p2[1]) < maxDist))
-		{
-            // return index of point if found
-			return i;
-		}
+        var p2 = dotArr[i];
+	if((Math.abs(p1[0] - p2[0]) < maxDist) 
+            && (Math.abs(p1[1] - p2[1]) < maxDist))
+	{
+        // return index of point if found
+            return i;
 	}
-	return -1;
+    }
+    // -1 if not found
+    return -1;
 }
 
 function pickKey(event){
@@ -274,7 +273,7 @@ function pickKey(event){
 }
 
 function getPoint(event){   
-    //need to change to offset canvas
+    // offset canvas
     var x = event.pageX - canvas.offsetLeft;
     var y = event.pageY - canvas.offsetTop;
     return vec2(2 * x / canvas.width - 1, 2 * (canvas.height - y) / canvas.height - 1);
