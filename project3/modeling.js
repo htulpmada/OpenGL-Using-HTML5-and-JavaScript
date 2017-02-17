@@ -16,7 +16,7 @@ var maxNumVertices = 3 * maxNumTriangles;
 var r = .5;
 
 var spin = false;
-var speed = 1;
+var speed = .05;
 
 var fColor;
 
@@ -24,7 +24,7 @@ var near = -10;
 var far = 10;
 var radius = 6.0;
 var theta  = 0.0;
-var phi    = 5.0;
+var phi    = 0.0;
 var dr = 5.0 * Math.PI/180.0;
 
 const black = vec4(0.0, 0.0, 0.0, 1.0);
@@ -37,8 +37,6 @@ const cyan = vec4( 0.0, 1.0, 1.0, 1.0 );
 
 const at = vec3(0.0, 0.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
-
-var eye = vec3( 0,2,6);
 
 var left = -2.0;
 var right = 2.0;
@@ -110,11 +108,14 @@ function render()
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // spin playground y axis
-    theta = spin ? speed : 0;
+    theta = spin ? theta + speed : theta;
     //phi = spin ? phi + speed : phi;
-    var t = rotate(eye,at,theta);
-    eye = vec3(t[0],t[1],t[2]);
     
+    var eye = vec3( radius*Math.sin(theta)*Math.cos(phi),
+                    radius*Math.sin(theta)*Math.sin(phi),
+                    radius*Math.cos(theta));
+
+ 
     var modelViewMatrix = lookAt( eye, at, up );
     var projectionMatrix = ortho( left, right, bottom, ytop, near, far );
     
