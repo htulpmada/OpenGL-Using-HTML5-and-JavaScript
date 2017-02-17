@@ -10,10 +10,11 @@ attribute  vec4 vPosition;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform mat4 rotateMatrix;
 
 void main() 
 {
-    gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+    gl_Position = projectionMatrix*modelViewMatrix*rotateMatrix*vPosition;
 } 
 </script>
 

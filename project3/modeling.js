@@ -24,8 +24,15 @@ var near = -10;
 var far = 10;
 var radius = 6.0;
 var theta  = 0.0;
+var angle  = 5.0;
 var phi    = 0.0;
 var dr = 5.0 * Math.PI/180.0;
+var c = Math.cos(angle);
+var s = Math.sin(angle);
+var rotatey = mat4( c, 0.0, s, 0.0,
+               0.0, 1.0,  0.0, 0.0,
+               -s, 0.0,  c, 0.0,
+               0.0, 0.0,  0.0, 1.0 );
 
 const black = vec4(0.0, 0.0, 0.0, 1.0);
 const red = vec4( 1.0, 0.0, 0.0, 1.0 );  
@@ -44,7 +51,7 @@ var ytop = 2.0;
 var bottom = -2.0;
 
 var modeViewMatrix, projectionMatrix;
-var modelViewMatrixLoc, projectionMatrixLoc;
+var modelViewMatrixLoc, projectionMatrixLoc, rotateMatrixLoc;
 
 window.onload = function init()
 {
@@ -89,8 +96,9 @@ window.onload = function init()
 
     modelViewMatrixLoc = gl.getUniformLocation( program, "modelViewMatrix" );
     projectionMatrixLoc = gl.getUniformLocation( program, "projectionMatrix" );
+    rotateMatrixLoc = gl.getUniformLocation( program, "rotateMatrix" );
 
-// buttons for moving viewer and changing size
+    // buttons for moving viewer and changing size
 
     document.getElementById("start_stop").onclick = 
             function(){
@@ -108,7 +116,7 @@ function render()
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // spin playground y axis
-    theta = spin ? theta + speed : theta;
+    angle = spin ? angle + speed : angle;
     //phi = spin ? phi + speed : phi;
     
     var eye = vec3( radius*Math.sin(theta)*Math.cos(phi),
@@ -118,10 +126,17 @@ function render()
  
     var modelViewMatrix = lookAt( eye, at, up );
     var projectionMatrix = ortho( left, right, bottom, ytop, near, far );
+    c = Math.cos(angle);
+    s = Math.sin(angle);
+    rotatey = mat4( c, -s, 0.0, 0.0,
+               s, c,  0.0, 0.0,
+               0.0, 0.0,  1.0, 0.0,
+               0.0, 0.0,  0.0, 1.0 );
     
     
     gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
+    gl.uniformMatrix4fv( rotateMatrixLoc, false, flatten(rotatey) );
 
     // draw each quad as two filled red triangles
     // and then as two black line loops
