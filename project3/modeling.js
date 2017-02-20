@@ -7,13 +7,14 @@ var thetaLoc;
 var pointsArray = [];
 var topArr = [];
 var bottomArr = [];
+var sideArr = [];
 var handles = [];
-
-var numOfTris = 10;
+var rotatey;;
+var numOfTris = 25;
 var maxNumTriangles = 200;
 var maxNumVertices = 3 * maxNumTriangles;
 
-var r = .5;
+var r = 1.5;
 
 var spin = false;
 var speed = .05;
@@ -22,16 +23,17 @@ var fColor;
 
 var near = -10;
 var far = 10;
-var radius = 6.0;
-var theta  = 0.0;
-var angle  = 5.0;
-var phi    = 0.0;
+var radius = 2.0;
+var theta  = 20.0 * Math.PI/180.0;
+var angle  = 5.0 * Math.PI/180.0;
+var phi    = 50.0 * Math.PI/180.0;
 var dr = 5.0 * Math.PI/180.0;
 var c = Math.cos(angle);
 var s = Math.sin(angle);
 var eye = vec3( radius*Math.cos(theta)*Math.sin(phi),
                     radius*Math.sin(theta)*Math.sin(phi),
                     radius*Math.cos(phi));
+var thickness = .25;
 
 const black = vec4(0.0, 0.0, 0.0, 1.0);
 const red = vec4( 1.0, 0.0, 0.0, 1.0 );  
@@ -51,6 +53,7 @@ var bottom = -2.0;
 
 var modeViewMatrix, projectionMatrix;
 var modelViewMatrixLoc, projectionMatrixLoc, rotateMatrixLoc;
+var vBufferId;
 
 window.onload = function init()
 {
@@ -83,9 +86,9 @@ window.onload = function init()
     gl.useProgram( program );
 
 
-    var vBufferId = gl.createBuffer();
+    vBufferId = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(topArr), gl.STATIC_DRAW);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(sideArr), gl.STATIC_DRAW);
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
@@ -115,25 +118,16 @@ function render()
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // spin playground y axis
-    //angle = spin ? angle + speed : angle;
-    theta = spin ? theta + speed : theta;
-    //phi = spin ? phi + speed : phi;
+    angle = spin ? angle + speed : angle;
     
-    //eye = vec3( radius*Math.cos(theta)*Math.sin(1),
-    //                radius*Math.sin(theta)*Math.sin(1),
-    //                radius*Math.cos(1));
-
-    eye = vec3(1,1,1);
- 
     var modelViewMatrix = lookAt( eye, at, up );
     var projectionMatrix = ortho( left, right, bottom, ytop, near, far );
     c = Math.cos(angle);
     s = Math.sin(angle);
-    var rotatey = mat4( c, -s, 0.0, 0.0,
-               s, c,  0.0, 0.0,
-               0.0, 0.0,  1.0, 0.0,
-               0.0, 0.0,  0.0, 1.0 );
-     
+    rotatey = mat4( c, 0.0, -s, 0.0,
+		    0.0, 1.0,  0.0, 0.0,
+		    s, 0.0,  c, 0.0,
+		    0.0, 0.0,  0.0, 1.0 );
     
     gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
@@ -141,28 +135,31 @@ function render()
 
     // draw each quad as two filled red triangles
     // and then as two black line loops
-
-        // draw top
-
+    
+    // draw top
         gl.uniform4fv(fColor, flatten(red));
-        gl.drawArrays( gl.TRIANGLE_FAN, 0, numOfTris+1);
-        gl.uniform4fv(fColor, flatten(black));
-        gl.drawArrays( gl.LINE_LOOP, 1, numOfTris);
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(topArr));
+        gl.drawArrays( gl.TRIANGLE_FAN, 0, topArr.length);
 
-/*
+        gl.uniform4fv(fColor, flatten(black));
+        gl.drawArrays( gl.LINE_LOOP, 1, topArr.length-1);
+        
         // draw bottom
         gl.uniform4fv(fColor, flatten(red));
-        gl.drawArrays( gl.TRIANGLE_FAN, (numOfTris+1)*2, numOfTris+1);
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(bottomArr));
+        gl.drawArrays( gl.TRIANGLE_FAN, 0, bottomArr.length);
+
         gl.uniform4fv(fColor, flatten(black));
-        gl.drawArrays( gl.LINE_LOOP, (numOfTris+1)*2, numOfTris+1);
+        gl.drawArrays( gl.LINE_LOOP, 1, bottomArr.length-1);
   
-        // draw handles
-        
+        // draw sides need to shuffle top and bottom together
         gl.uniform4fv(fColor, flatten(red));
-        gl.drawArrays( gl.TRIANGLE_FAN, (numOfTris+1)*2, handles.length);
-        gl.uniform4fv(fColor, flatten(black));
-        gl.drawArrays( gl.LINE_LOOP, (numOfTris+1)*2, handles.length);
-  */      
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(sideArr));
+        gl.drawArrays( gl.TRIANGLE_STRIP, 0, sideArr.length);
+
  
     requestAnimFrame(render);
 }
@@ -185,6 +182,8 @@ function rotate(point, origin, angle) {
 function makePlayground(){
     // account for last vertex of fan
     numOfTris++;
+
+    // top 
     //first point of triangle fan
     var origin = new vec4(at[0],at[1],at[2],1.0);
     topArr.push(origin);
@@ -196,6 +195,27 @@ function makePlayground(){
     for(var i = 1; i <= numOfTris; i++){
         topArr.push(t);
         t = rotate(t,origin, 360/(numOfTris-1));
+    }
+
+    // bottom 
+    //first point of triangle fan
+    var origin = new vec4(at[0],at[1] - thickness,at[2],1.0);
+    bottomArr.push(origin);
+    
+    //first point of circle
+    var t = vec4(at[0],at[1] - thickness,at[2],1.0);
+    t[2] += r;
+    
+    for(var i = 1; i <= numOfTris; i++){
+        bottomArr.push(t);
+        t = rotate(t,origin, 360/(numOfTris-1));
+    }
+    
+    // draw sides
+    var j = topArr.length;
+    for(var i = 1; i < j; i++){
+        sideArr.push(topArr[i]);
+        sideArr.push(bottomArr[i]);
     }
 
 }
