@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+
 
 <p> </p>
 <button id = "start_stop">Start</button>
@@ -15,6 +15,7 @@ uniform mat4 rotateMatrix;
 void main() 
 {
     gl_Position = projectionMatrix*modelViewMatrix*rotateMatrix*vPosition;
+//    gl_Position = projectionMatrix*modelViewMatrix*vPosition;
 } 
 </script>
 
@@ -46,4 +47,4 @@ Oops ... your browser doesn't support the HTML5 canvas element
 
 
 </body>
-</html>
+

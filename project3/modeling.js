@@ -29,10 +29,9 @@ var phi    = 0.0;
 var dr = 5.0 * Math.PI/180.0;
 var c = Math.cos(angle);
 var s = Math.sin(angle);
-var rotatey = mat4( c, 0.0, s, 0.0,
-               0.0, 1.0,  0.0, 0.0,
-               -s, 0.0,  c, 0.0,
-               0.0, 0.0,  0.0, 1.0 );
+var eye = vec3( radius*Math.cos(theta)*Math.sin(phi),
+                    radius*Math.sin(theta)*Math.sin(phi),
+                    radius*Math.cos(phi));
 
 const black = vec4(0.0, 0.0, 0.0, 1.0);
 const red = vec4( 1.0, 0.0, 0.0, 1.0 );  
@@ -116,23 +115,25 @@ function render()
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     // spin playground y axis
-    angle = spin ? angle + speed : angle;
+    //angle = spin ? angle + speed : angle;
+    theta = spin ? theta + speed : theta;
     //phi = spin ? phi + speed : phi;
     
-    var eye = vec3( radius*Math.sin(theta)*Math.cos(phi),
-                    radius*Math.sin(theta)*Math.sin(phi),
-                    radius*Math.cos(theta));
+    //eye = vec3( radius*Math.cos(theta)*Math.sin(1),
+    //                radius*Math.sin(theta)*Math.sin(1),
+    //                radius*Math.cos(1));
 
+    eye = vec3(1,1,1);
  
     var modelViewMatrix = lookAt( eye, at, up );
     var projectionMatrix = ortho( left, right, bottom, ytop, near, far );
     c = Math.cos(angle);
     s = Math.sin(angle);
-    rotatey = mat4( c, -s, 0.0, 0.0,
+    var rotatey = mat4( c, -s, 0.0, 0.0,
                s, c,  0.0, 0.0,
                0.0, 0.0,  1.0, 0.0,
                0.0, 0.0,  0.0, 1.0 );
-    
+     
     
     gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
@@ -142,7 +143,6 @@ function render()
     // and then as two black line loops
 
         // draw top
-//        gl.uniform3fv(thetaLoc, spinTheta);
 
         gl.uniform4fv(fColor, flatten(red));
         gl.drawArrays( gl.TRIANGLE_FAN, 0, numOfTris+1);
@@ -170,15 +170,15 @@ function render()
 
 function rotate(point, origin, angle) {
     var pointX = point[0];
-    var pointY = point[1];
+    var pointZ = point[2];
     var originX = origin[0];
-    var originY = origin[1];
-    // Rotate point around origin given
+    var originZ = origin[2];
+    // Rotate point around origin and Y axis
     angle = angle * Math.PI / 180.0;
     return vec4(
-        Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointY-originY) + originX,
-        Math.sin(angle) * (pointX-originX) + Math.cos(angle) * (pointY-originY) + originY,
-        point[2],
+        Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointZ-originZ) + originX,
+        point[1],
+        Math.sin(angle) * (pointX-originX) + Math.cos(angle) * (pointZ-originZ) + originZ,
         1.0);
 }
 
@@ -191,7 +191,7 @@ function makePlayground(){
     
     //first point of circle
     var t = vec4(at[0],at[1],at[2],1.0);
-    t[0] += r;
+    t[2] += r;
     
     for(var i = 1; i <= numOfTris; i++){
         topArr.push(t);
