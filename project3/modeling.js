@@ -23,9 +23,9 @@ var fColor;
 var near = -10;
 var far = 10;
 var radius = 6.0;
-var theta  = 0.0;
+var theta  = 0.0 * Math.PI/180.0;
 var angle  = 5.0;
-var phi    = 0.0;
+var phi    = 0.0 * Math.PI/180.0;
 var dr = 5.0 * Math.PI/180.0;
 var c = Math.cos(angle);
 var s = Math.sin(angle);
@@ -33,6 +33,10 @@ var rotatey = mat4( c, 0.0, s, 0.0,
                0.0, 1.0,  0.0, 0.0,
                -s, 0.0,  c, 0.0,
                0.0, 0.0,  0.0, 1.0 );
+
+var eye = vec3( radius*Math.sin(theta)*Math.cos(phi),
+                radius*Math.sin(theta)*Math.sin(phi),
+                radius*Math.cos(phi));
 
 const black = vec4(0.0, 0.0, 0.0, 1.0);
 const red = vec4( 1.0, 0.0, 0.0, 1.0 );  
@@ -119,9 +123,9 @@ function render()
     angle = spin ? angle + speed : angle;
     //phi = spin ? phi + speed : phi;
     
-    var eye = vec3( radius*Math.sin(theta)*Math.cos(phi),
-                    radius*Math.sin(theta)*Math.sin(phi),
-                    radius*Math.cos(theta));
+//    var eye = vec3( radius*Math.sin(theta)*Math.cos(phi),
+//                    radius*Math.sin(theta)*Math.sin(phi),
+//                    radius*Math.cos(theta));
 
  
     var modelViewMatrix = lookAt( eye, at, up );
