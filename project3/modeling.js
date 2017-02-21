@@ -9,7 +9,7 @@ var topArr = [];
 var bottomArr = [];
 var sideArr = [];
 var handles = [];
-var rotatey;;
+var rotatey;
 var numOfTris = 25;
 var maxNumTriangles = 200;
 var maxNumVertices = 3 * maxNumTriangles;
@@ -34,6 +34,7 @@ var eye = vec3( radius*Math.cos(theta)*Math.sin(phi),
                     radius*Math.sin(theta)*Math.sin(phi),
                     radius*Math.cos(phi));
 var thickness = .25;
+var numofHandles = 4;
 
 const black = vec4(0.0, 0.0, 0.0, 1.0);
 const red = vec4( 1.0, 0.0, 0.0, 1.0 );  
@@ -160,6 +161,15 @@ function render()
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(sideArr));
         gl.drawArrays( gl.TRIANGLE_STRIP, 0, sideArr.length);
 
+        // draw handles
+        gl.uniform4fv(fColor, flatten(black));
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(handles));
+        gl.drawArrays( gl.LINE_STRIP, 0, handles.length);
+
+        //gl.uniform4fv(fColor, flatten(black));
+        //gl.drawArrays( gl.LINE_LOOP, 1, handles.length-1);
+  
  
     requestAnimFrame(render);
 }
@@ -176,6 +186,20 @@ function rotate(point, origin, angle) {
         Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointZ-originZ) + originX,
         point[1],
         Math.sin(angle) * (pointX-originX) + Math.cos(angle) * (pointZ-originZ) + originZ,
+        1.0);
+}
+
+function rotateUp(point, origin, angle) {
+    var pointX = point[0];
+    var pointY = point[1];
+    var originX = origin[0];
+    var originY = origin[1];
+    // Rotate point around origin and Y axis
+    angle = angle * Math.PI / 180.0;
+    return vec4(
+        Math.cos(angle) * (pointX-originX) - Math.sin(angle) * (pointY-originY) + originX,
+        Math.sin(angle) * (pointX-originX) + Math.cos(angle) * (pointY-originY) + originY,
+        point[1],
         1.0);
 }
 
@@ -197,7 +221,8 @@ function makePlayground(){
         t = rotate(t,origin, 360/(numOfTris-1));
     }
 
-    // bottom 
+    // bottom
+      
     //first point of triangle fan
     var origin = new vec4(at[0],at[1] - thickness,at[2],1.0);
     bottomArr.push(origin);
@@ -216,6 +241,16 @@ function makePlayground(){
     for(var i = 1; i < j; i++){
         sideArr.push(topArr[i]);
         sideArr.push(bottomArr[i]);
+    }
+
+    // draw handles
+    var interval =.1;
+    for(var z = 0; z < numofHandles; z++){
+        origin = vec4(at[0],at[1],at[2],at[3]);
+        var t = vec4(at[0],at[1] + (r/3.0),at[2],at[3]);
+        for(j = (r/3.0); j < (2*r/3.0);j+=interval){
+//            handles.push(rotateUp(origin,t, 360/(j/(interval-1))));
+        }
     }
 
 }
