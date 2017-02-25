@@ -10,7 +10,7 @@ var bottomArr = [];
 var sideArr = [];
 var handles = [];
 
-var numOfTris = 25;
+var numOfTris = 10;
 var maxNumTriangles = 200;
 var maxNumVertices = 3 * maxNumTriangles;
 
@@ -87,7 +87,7 @@ window.onload = function init()
 
     vBufferId = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
-    gl.bufferData( gl.ARRAY_BUFFER, flatten(sideArr), gl.STATIC_DRAW);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(sideArr[0]), gl.STATIC_DRAW);
 
     var vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
@@ -136,37 +136,44 @@ function render()
     // and then as two black line loops
     
     // draw top
+    
+    for(var i = 0; i < topArr.length ;i++){
         gl.uniform4fv(fColor, flatten(red));
         gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(topArr));
-        gl.drawArrays( gl.TRIANGLE_FAN, 0, topArr.length);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(topArr[i]));
+        gl.drawArrays( gl.TRIANGLE_FAN, 0, topArr[i].length);
 
         gl.uniform4fv(fColor, flatten(black));
-        gl.drawArrays( gl.LINE_LOOP, 1, topArr.length-1);
-        
+        gl.drawArrays( gl.LINE_LOOP, 1, topArr[i].length-1);
+    }
         // draw bottom
+    
+    for(i = 0; i < topArr.length ;i++){
         gl.uniform4fv(fColor, flatten(red));
         gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(bottomArr));
-        gl.drawArrays( gl.TRIANGLE_FAN, 0, bottomArr.length);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(bottomArr[i]));
+        gl.drawArrays( gl.TRIANGLE_FAN, 0, bottomArr[i].length);
 
         gl.uniform4fv(fColor, flatten(black));
-        gl.drawArrays( gl.LINE_LOOP, 1, bottomArr.length-1);
-  
-        // draw sides need to shuffle top and bottom together
+        gl.drawArrays( gl.LINE_LOOP, 1, bottomArr[i].length-1);
+    }
+    // draw sides need to shuffle top and bottom together
+    for(var i = 0; i < topArr.length ;i++){
         gl.uniform4fv(fColor, flatten(red));
         gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(sideArr));
-        gl.drawArrays( gl.TRIANGLE_STRIP, 0, sideArr.length);
-
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(sideArr[i]));
+        gl.drawArrays( gl.TRIANGLE_STRIP, 0, sideArr[i].length);
+        gl.uniform4fv(fColor, flatten(black));
+        gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
+    }
         // draw handles
-        gl.uniform4fv(fColor, flatten(black));
-        gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(handles));
-        gl.drawArrays( gl.LINE_STRIP, 0, handles.length);
+        
+    
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(handles));
+    gl.drawArrays( gl.LINE_STRIP, 0, handles.length);
 
-        //gl.uniform4fv(fColor, flatten(black));
-        //gl.drawArrays( gl.LINE_LOOP, 1, handles.length-1);
+    //gl.uniform4fv(fColor, flatten(black));
+    //gl.drawArrays( gl.LINE_LOOP, 1, handles.length-1);
   
  
     requestAnimFrame(render);
@@ -211,19 +218,34 @@ function makePlayground(){
     var axis = 'x';
     var a = 0;
 
-    makeCylinder(bottom,height,rad,axis,a);
-    // center cylinder
-    bottom[1]+=height;
-    rad = rad/10;
+    //  platform
     makeCylinder(bottom,height,rad,axis,a);
 
+    // center cylinder
+    var bCenter = vec4(bottom[0],bottom[1],bottom[2],1.0);
+    bCenter[1]+=height+.01;
+    rad = rad/10;
+    height+=.25;
+    makeCylinder(bCenter,height,rad,axis,a);
+    
+    //handles
+    var bH1 = vec4(bCenter[0],bCenter[1],bCenter[2],1.0);
+    bH1[0]+=.5;
+    bH1[1]+=.5;
+    rad = rad/10;
+    height+=.25;
+    a=20;
+    makeCylinder(bH1,height,rad,axis,a);
+    
+    
 }
 
-function makeCylinder(origin,len,rad,axis,angle){
+function makeCylinder(orig,len,rad,axis,angle){
 
     var tArr = [];
     var bArr = [];
     var sArr = [];
+
     angle = angle * Math.PI/180;
     var c = Math.cos(angle);
     var s = Math.sin(angle);
@@ -243,29 +265,30 @@ function makeCylinder(origin,len,rad,axis,angle){
                         0.0,  0.0, 0.0, 1.0 );
     // top 
     //first point of triangle fan
-    tArr.push(origin);
+    tArr.push(orig);
     //first point of circle
-    var t = vec4(origin[0],origin[1],origin[2],1.0);
+    var t = vec4(orig[0],orig[1],orig[2],1.0);
     t[2] += rad;
     for(var i = 1; i <= numOfTris; i++){
         tArr.push(t);
-        t = rotate(t,origin, 360/(numOfTris-1));
+        t = rotate(t,orig, 360/(numOfTris-1));
     }
 
     // bottom
-    origin = new vec4(origin[0],origin[1] + len,origin[2],1.0);
-    bArr.push(origin);
-    t = vec4(origin[0],origin[1] + len,origin[2],1.0);
-    t[2] += r;
+    orig = new vec4(orig[0],orig[1] + len,orig[2],1.0);
+    bArr.push(orig);
+    t = vec4(orig[0],orig[1] + len,orig[2],1.0);
+    t[2] += rad;
     
     for(var i = 1; i <= numOfTris; i++){
         bArr.push(t);
-        t = rotate(t,origin, 360/(numOfTris-1));
+        t = rotate(t,orig, 360/(numOfTris-1));
     }
     // rotate cylinder here
     switch(axis){
         case 'x':
             for(i=0;i<tArr.length;i++){
+                
                 tArr[i][0] = dot(tArr[i],rx[0]);
                 tArr[i][1] = dot(tArr[i],rx[1]);
                 tArr[i][2] = dot(tArr[i],rx[2]);
@@ -302,16 +325,16 @@ function makeCylinder(origin,len,rad,axis,angle){
         sArr.push(tArr[i]);
         sArr.push(bArr[i]);
     }
-   
+//    return [tArr,bArr,sArr];
     //add to global arrays
-    for(j=0;j<tArr.length;j++){
-        topArr.push(tArr[j]);
-        bottomArr.push(bArr[j]);
-        sideArr.push(sArr[j]);
-    }
-    for(;j<sArr.length;j++){
-        sideArr.push(sArr[j]);
-    }
+ //   for(j=0;j<tArr.length;j++){
+        topArr.push(tArr);
+        bottomArr.push(bArr);
+        sideArr.push(sArr);
+ //   }
+ //   for(;j<sArr.length;j++){
+ //       sideArr.push(sArr[j]);
+ //   }
 }
 
 
