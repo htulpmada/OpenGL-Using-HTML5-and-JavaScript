@@ -9,7 +9,7 @@ var topArr = [];
 var bottomArr = [];
 var sideArr = [];
 var handles = [];
-var rotatey;
+
 var numOfTris = 25;
 var maxNumTriangles = 200;
 var maxNumVertices = 3 * maxNumTriangles;
@@ -25,14 +25,12 @@ var near = -10;
 var far = 10;
 var radius = 2.0;
 var theta  = 20.0 * Math.PI/180.0;
-var angle  = 5.0 * Math.PI/180.0;
+var angle  = 10.0 * Math.PI/180.0;
 var phi    = 50.0 * Math.PI/180.0;
+var eye = vec3( radius*Math.cos(theta)*Math.sin(phi), 
+                    radius*Math.sin(theta)*Math.sin(phi), 
+                    radius*Math.cos(phi)); 
 var dr = 5.0 * Math.PI/180.0;
-var c = Math.cos(angle);
-var s = Math.sin(angle);
-var eye = vec3( radius*Math.cos(theta)*Math.sin(phi),
-                    radius*Math.sin(theta)*Math.sin(phi),
-                    radius*Math.cos(phi));
 var thickness = .25;
 var numofHandles = 4;
 
@@ -123,9 +121,9 @@ function render()
     
     var modelViewMatrix = lookAt( eye, at, up );
     var projectionMatrix = ortho( left, right, bottom, ytop, near, far );
-    c = Math.cos(angle);
-    s = Math.sin(angle);
-    rotatey = mat4( c, 0.0, -s, 0.0,
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
+    var rotatey = mat4( c, 0.0, -s, 0.0,
 		    0.0, 1.0,  0.0, 0.0,
 		    s, 0.0,  c, 0.0,
 		    0.0, 0.0,  0.0, 1.0 );
@@ -206,53 +204,115 @@ function rotateUp(point, origin, angle) {
 function makePlayground(){
     // account for last vertex of fan
     numOfTris++;
+    // top 
+    var height = .1;
+    var bottom = vec4(at[0],at[1],at[2],1.0);
+    var rad=r;
+    var axis = 'x';
+    var a = 0;
 
+    makeCylinder(bottom,height,rad,axis,a);
+    // center cylinder
+    bottom[1]+=height;
+    rad = rad/10;
+    makeCylinder(bottom,height,rad,axis,a);
+
+}
+
+function makeCylinder(origin,len,rad,axis,angle){
+
+    var tArr = [];
+    var bArr = [];
+    var sArr = [];
+    angle = angle * Math.PI/180;
+    var c = Math.cos(angle);
+    var s = Math.sin(angle);
+    var ry = mat4( c, 0.0, -s, 0.0,
+                        0.0, 1.0,  0.0, 0.0,
+                        s, 0.0,  c, 0.0,
+                        0.0, 0.0,  0.0, 1.0 );
+
+    var rx = mat4( 1.0,  0.0,  0.0, 0.0,
+                        0.0,  c,  s, 0.0,
+                        0.0, -s,  c, 0.0,
+                        0.0,  0.0,  0.0, 1.0 );
+
+    var rz = mat4( c, s, 0.0, 0.0,
+                        -s,  c, 0.0, 0.0,
+                        0.0,  0.0, 1.0, 0.0,
+                        0.0,  0.0, 0.0, 1.0 );
     // top 
     //first point of triangle fan
-    var origin = new vec4(at[0],at[1],at[2],1.0);
-    topArr.push(origin);
-    
+    tArr.push(origin);
     //first point of circle
-    var t = vec4(at[0],at[1],at[2],1.0);
-    t[2] += r;
-    
+    var t = vec4(origin[0],origin[1],origin[2],1.0);
+    t[2] += rad;
     for(var i = 1; i <= numOfTris; i++){
-        topArr.push(t);
+        tArr.push(t);
         t = rotate(t,origin, 360/(numOfTris-1));
     }
 
     // bottom
-      
-    //first point of triangle fan
-    var origin = new vec4(at[0],at[1] - thickness,at[2],1.0);
-    bottomArr.push(origin);
-    
-    //first point of circle
-    var t = vec4(at[0],at[1] - thickness,at[2],1.0);
+    origin = new vec4(origin[0],origin[1] + len,origin[2],1.0);
+    bArr.push(origin);
+    t = vec4(origin[0],origin[1] + len,origin[2],1.0);
     t[2] += r;
     
     for(var i = 1; i <= numOfTris; i++){
-        bottomArr.push(t);
+        bArr.push(t);
         t = rotate(t,origin, 360/(numOfTris-1));
+    }
+    // rotate cylinder here
+    switch(axis){
+        case 'x':
+            for(i=0;i<tArr.length;i++){
+                tArr[i][0] = dot(tArr[i],rx[0]);
+                tArr[i][1] = dot(tArr[i],rx[1]);
+                tArr[i][2] = dot(tArr[i],rx[2]);
+                bArr[i][0] = dot(bArr[i],rx[0]);
+                bArr[i][1] = dot(bArr[i],rx[1]);
+                bArr[i][2] = dot(bArr[i],rx[2]);
+            }
+            break;
+        case 'y':
+            for(i=0;i<tArr.length;i++){
+                tArr[i][0] = dot(tArr[i],ry[0]);
+                tArr[i][1] = dot(tArr[i],ry[1]);
+                tArr[i][2] = dot(tArr[i],ry[2]);
+                bArr[i][0] = dot(bArr[i],ry[0]);
+                bArr[i][1] = dot(bArr[i],ry[1]);
+                bArr[i][2] = dot(bArr[i],ry[2]);
+            }
+            break;
+        case 'z':
+            for(i=0;i<tArr.length;i++){
+                tArr[i][0] = dot(tArr[i],rz[0]);
+                tArr[i][1] = dot(tArr[i],rz[1]);
+                tArr[i][2] = dot(tArr[i],rz[2]);
+                bArr[i][0] = dot(bArr[i],rz[0]);
+                bArr[i][1] = dot(bArr[i],rz[1]);
+                bArr[i][2] = dot(bArr[i],rz[2]);
+            }
+            break;
     }
     
     // draw sides
-    var j = topArr.length;
+    var j = tArr.length;
     for(var i = 1; i < j; i++){
-        sideArr.push(topArr[i]);
-        sideArr.push(bottomArr[i]);
+        sArr.push(tArr[i]);
+        sArr.push(bArr[i]);
     }
-
-    // draw handles
-    var interval =.07;
-    //for(var z = 0; z < numofHandles; z++){
-        origin = vec4(at[0],at[1],at[2],1.0);
-        var t = vec4(at[0] + (r/2.0),at[1],at[2],1.0);
-      //  t = rotate(t, origin, (360/numofHandles*z));
-//        handles.push(t);
-        for(j = 1; j < 2;j+=interval){
-           handles.push(rotateUp(origin,t, 360/((r/3.0)/interval)));
-        }
-    //}
-
+   
+    //add to global arrays
+    for(j=0;j<tArr.length;j++){
+        topArr.push(tArr[j]);
+        bottomArr.push(bArr[j]);
+        sideArr.push(sArr[j]);
+    }
+    for(;j<sArr.length;j++){
+        sideArr.push(sArr[j]);
+    }
 }
+
+
+
