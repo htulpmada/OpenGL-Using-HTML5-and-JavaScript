@@ -244,13 +244,15 @@ function makePlayground(){
     }
 
     // draw handles
-    var interval =.1;
-    for(var z = 0; z < numofHandles; z++){
-        origin = vec4(at[0],at[1],at[2],at[3]);
-        var t = vec4(at[0],at[1] + (r/3.0),at[2],at[3]);
-        for(j = (r/3.0); j < (2*r/3.0);j+=interval){
-//            handles.push(rotateUp(origin,t, 360/(j/(interval-1))));
+    var interval =.07;
+    //for(var z = 0; z < numofHandles; z++){
+        origin = vec4(at[0],at[1],at[2],1.0);
+        var t = vec4(at[0] + (r/2.0),at[1],at[2],1.0);
+      //  t = rotate(t, origin, (360/numofHandles*z));
+//        handles.push(t);
+        for(j = 1; j < 2;j+=interval){
+           handles.push(rotateUp(origin,t, 360/((r/3.0)/interval)));
         }
-    }
+    //}
 
 }
