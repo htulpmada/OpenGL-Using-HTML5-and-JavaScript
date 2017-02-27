@@ -180,7 +180,7 @@ function render()
 }
 
 
-function rotate(point, origin, angle) {
+function rotateAround(point, origin, angle) {
     var pointX = point[0];
     var pointZ = point[2];
     var originX = origin[0];
@@ -234,7 +234,7 @@ function makePlayground(){
     bH1[1]+=.5;
     rad = rad/10;
     height+=.25;
-    a=20;
+    a=45;
     makeCylinder(bH1,height,rad,axis,a);
     
     
@@ -246,58 +246,65 @@ function makeCylinder(orig,len,rad,axis,angle){
     var bArr = [];
     var sArr = [];
 
-    angle = angle * Math.PI/180;
-    var c = Math.cos(angle);
-    var s = Math.sin(angle);
-    var ry = mat4( c, 0.0, -s, 0.0,
-                        0.0, 1.0,  0.0, 0.0,
-                        s, 0.0,  c, 0.0,
-                        0.0, 0.0,  0.0, 1.0 );
-
-    var rx = mat4( 1.0,  0.0,  0.0, 0.0,
-                        0.0,  c,  s, 0.0,
-                        0.0, -s,  c, 0.0,
-                        0.0,  0.0,  0.0, 1.0 );
-
-    var rz = mat4( c, s, 0.0, 0.0,
-                        -s,  c, 0.0, 0.0,
-                        0.0,  0.0, 1.0, 0.0,
-                        0.0,  0.0, 0.0, 1.0 );
-    // top 
+    //angle = angle * Math.PI/180;
+    //var c = Math.cos(angle);
+    //var s = Math.sin(angle);
+    
+   
+    // bottom first 
     //first point of triangle fan
-    tArr.push(orig);
+    bArr.push(orig);
     //first point of circle
     var t = vec4(orig[0],orig[1],orig[2],1.0);
     t[2] += rad;
     for(var i = 1; i <= numOfTris; i++){
-        tArr.push(t);
-        t = rotate(t,orig, 360/(numOfTris-1));
+        bArr.push(t);
+        t = rotateAround(t,orig, 360/(numOfTris-1));
     }
 
-    // bottom
+    // top
     orig = new vec4(orig[0],orig[1] + len,orig[2],1.0);
-    bArr.push(orig);
+    tArr.push(orig);
     t = vec4(orig[0],orig[1] + len,orig[2],1.0);
     t[2] += rad;
     
     for(var i = 1; i <= numOfTris; i++){
-        bArr.push(t);
-        t = rotate(t,orig, 360/(numOfTris-1));
+        tArr.push(t);
+        t = rotateAround(t,orig, 360/(numOfTris-1));
     }
     // rotate cylinder here
+    // translate, rotate, translate back 
     switch(axis){
         case 'x':
+            //var rx = mat4( 1.0,  0.0,  0.0, 0.0,
+            //            0.0,  c,  s, 0.0,
+            //            0.0, -s,  c, 0.0,
+            //            0.0,  0.0,  0.0, 1.0 );
             for(i=0;i<tArr.length;i++){
-                
+                var toOrig = mat4( 1.0, 0.0,  0.0,  -tArr[i][0],
+                            0.0,  1.0,  0.0,  -tArr[i][1],
+                            0.0,  0.0,  1.0,  -tArr[i][2],
+                            0.0,  0.0,  0.0,  1.0);
+                var fromOrig = mat4( 1.0, 0.0,  0.0,  tArr[i][0],
+                            0.0,  1.0,  0.0,  tArr[i][1],
+                            0.0,  0.0,  1.0,  tArr[i][2],
+                            0.0,  0.0,  0.0,  1.0);
+               
+           var rx=rotate(angle,[0,0,1]);
                 tArr[i][0] = dot(tArr[i],rx[0]);
                 tArr[i][1] = dot(tArr[i],rx[1]);
                 tArr[i][2] = dot(tArr[i],rx[2]);
                 bArr[i][0] = dot(bArr[i],rx[0]);
                 bArr[i][1] = dot(bArr[i],rx[1]);
                 bArr[i][2] = dot(bArr[i],rx[2]);
+            
             }
             break;
         case 'y':
+            var ry = mat4( c, 0.0, -s, 0.0,
+                        0.0, 1.0,  0.0, 0.0,
+                        s, 0.0,  c, 0.0,
+                        0.0, 0.0,  0.0, 1.0 );
             for(i=0;i<tArr.length;i++){
                 tArr[i][0] = dot(tArr[i],ry[0]);
                 tArr[i][1] = dot(tArr[i],ry[1]);
@@ -308,6 +315,10 @@ function makeCylinder(orig,len,rad,axis,angle){
             }
             break;
         case 'z':
+            var rz = mat4( c, s, 0.0, 0.0,
+                        -s,  c, 0.0, 0.0,
+                        0.0,  0.0, 1.0, 0.0,
+                        0.0,  0.0, 0.0, 1.0 );
             for(i=0;i<tArr.length;i++){
                 tArr[i][0] = dot(tArr[i],rz[0]);
                 tArr[i][1] = dot(tArr[i],rz[1]);
@@ -325,16 +336,11 @@ function makeCylinder(orig,len,rad,axis,angle){
         sArr.push(tArr[i]);
         sArr.push(bArr[i]);
     }
-//    return [tArr,bArr,sArr];
-    //add to global arrays
- //   for(j=0;j<tArr.length;j++){
         topArr.push(tArr);
         bottomArr.push(bArr);
         sideArr.push(sArr);
- //   }
- //   for(;j<sArr.length;j++){
- //       sideArr.push(sArr[j]);
- //   }
+
+
 }
 
 
