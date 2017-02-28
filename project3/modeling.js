@@ -17,7 +17,7 @@ var maxNumVertices = 3 * maxNumTriangles;
 var r = 1.5;
 
 var spin = false;
-var speed = .05;
+var speed = 1;
 
 var fColor;
 
@@ -27,12 +27,9 @@ var radius = 2.0;
 var theta  = 20.0 * Math.PI/180.0;
 var angle  = 10.0 * Math.PI/180.0;
 var phi    = 50.0 * Math.PI/180.0;
-var eye = vec3( radius*Math.cos(theta)*Math.sin(phi), 
-                    radius*Math.sin(theta)*Math.sin(phi), 
-                    radius*Math.cos(phi)); 
-var dr = 5.0 * Math.PI/180.0;
-var thickness = .25;
-var numofHandles = 4;
+//var dr = 5.0 * Math.PI/180.0;
+//var thickness = .25;
+//var numofHandles = 4;
 
 const black = vec4(0.0, 0.0, 0.0, 1.0);
 const red = vec4( 1.0, 0.0, 0.0, 1.0 );  
@@ -42,6 +39,7 @@ const blue = vec4( 0.0, 0.0, 1.0, 1.0 );
 const magenta = vec4( 1.0, 0.0, 1.0, 1.0 );
 const cyan = vec4( 0.0, 1.0, 1.0, 1.0 );
 
+var eye = vec3( 0,.5,6); 
 const at = vec3(0.0, 0.0, 0.0);
 const up = vec3(0.0, 1.0, 0.0);
 
@@ -73,8 +71,7 @@ window.onload = function init()
     gl.enable(gl.POLYGON_OFFSET_FILL);
     gl.polygonOffset(1.0, 2.0);
 
-// vertex array of nRows*nColumns quadrilaterals
-// (two triangles/quad) from data
+
 
     makePlayground();
     
@@ -118,24 +115,18 @@ function render()
 
     // spin playground y axis
     angle = spin ? angle + speed : angle;
-    
-    var modelViewMatrix = lookAt( eye, at, up );
+    var or = rotateAround(eye,vec3(at[0],at[1]+eye[1],at[2]),angle);
+    var o = vec3(or[0],or[1],or[2]);
+    var modelViewMatrix = lookAt( o, at, up );
     var projectionMatrix = ortho( left, right, bottom, ytop, near, far );
-    var c = Math.cos(angle);
-    var s = Math.sin(angle);
-    var rotatey = mat4( c, 0.0, -s, 0.0,
-		    0.0, 1.0,  0.0, 0.0,
-		    s, 0.0,  c, 0.0,
-		    0.0, 0.0,  0.0, 1.0 );
-    
+
     gl.uniformMatrix4fv( modelViewMatrixLoc, false, flatten(modelViewMatrix) );
     gl.uniformMatrix4fv( projectionMatrixLoc, false, flatten(projectionMatrix) );
-    gl.uniformMatrix4fv( rotateMatrixLoc, false, flatten(rotatey) );
-
-    // draw each quad as two filled red triangles
+  
+    // draw each cylinder as two filled red triangles
     // and then as two black line loops
     
-    // draw top
+    // draw tops
     
     for(var i = 0; i < topArr.length ;i++){
         gl.uniform4fv(fColor, flatten(red));
@@ -146,7 +137,7 @@ function render()
         gl.uniform4fv(fColor, flatten(black));
         gl.drawArrays( gl.LINE_LOOP, 1, topArr[i].length-1);
     }
-        // draw bottom
+        // draw bottoms
     
     for(i = 0; i < topArr.length ;i++){
         gl.uniform4fv(fColor, flatten(red));
@@ -159,7 +150,9 @@ function render()
     }
     // draw sides need to shuffle top and bottom together
     for(var i = 0; i < topArr.length ;i++){
-        gl.uniform4fv(fColor, flatten(red));
+        if(i<2){
+            gl.uniform4fv(fColor, flatten(red));
+        }
         gl.bindBuffer( gl.ARRAY_BUFFER, vBufferId );
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, flatten(sideArr[i]));
         gl.drawArrays( gl.TRIANGLE_STRIP, 0, sideArr[i].length);
@@ -215,7 +208,7 @@ function makePlayground(){
     var height = .1;
     var bottom = vec4(at[0],at[1],at[2],1.0);
     var rad=r;
-    var axis = 'x';
+    var axis = 'z';
     var a = 0;
 
     //  platform
@@ -244,98 +237,90 @@ function makeCylinder(orig,len,rad,axis,angle){
 
     var tArr = [];
     var bArr = [];
-    var sArr = [];
+    var sArr = [];    
 
-    //angle = angle * Math.PI/180;
-    //var c = Math.cos(angle);
-    //var s = Math.sin(angle);
-    
-   
+    var bot = vec4(at[0],at[1],at[2],1.0);
+    var top = vec4(at[0],at[1] + len,at[2],1.0);
+    var a;
+
+    switch(axis){
+        case 'x':
+            a = vec3(1.0,at[1],at[2]);
+            break;
+        case 'y':
+            a = vec3(at[0],1.0,at[2]);
+            break;
+        case 'z':
+            a = vec3(at[0],at[1],1.0);
+            break;
+    }
+    //var angleR = angle * Math.PI/180;
+    var rot = rotate(angle ,a);
+
+  //  var toOrig = mat4( 1.0, 0.0,  0.0,  -orig[0],
+  //              0.0,  1.0,  0.0,  -orig[1],
+  //              0.0,  0.0,  1.0,  -orig[2],
+  //              0.0,  0.0,  0.0,  1.0);
+    var fromOrig = mat4( 1.0, 0.0,  0.0,  orig[0],
+                0.0,  1.0,  0.0,  orig[1],
+                0.0,  0.0,  1.0,  orig[2],
+                0.0,  0.0,  0.0,  1.0);
+
+
     // bottom first 
     //first point of triangle fan
-    bArr.push(orig);
+    bArr.push(bot);
     //first point of circle
-    var t = vec4(orig[0],orig[1],orig[2],1.0);
-    t[2] += rad;
+    var t = vec4(bot[0],bot[1],bot[2],1.0);
+    t[0] += rad;
     for(var i = 1; i <= numOfTris; i++){
         bArr.push(t);
-        t = rotateAround(t,orig, 360/(numOfTris-1));
+        t = rotateAround(t,bot, 360/(numOfTris-1));
     }
 
     // top
-    orig = new vec4(orig[0],orig[1] + len,orig[2],1.0);
-    tArr.push(orig);
-    t = vec4(orig[0],orig[1] + len,orig[2],1.0);
+    //orig = new vec4(orig[0],orig[1] + len,orig[2],1.0);
+    tArr.push(top);
+    t = vec4(top[0],top[1] + len,top[2],1.0);
     t[2] += rad;
     
     for(var i = 1; i <= numOfTris; i++){
         tArr.push(t);
-        t = rotateAround(t,orig, 360/(numOfTris-1));
-    }
-    // rotate cylinder here
-    // translate, rotate, translate back 
-    switch(axis){
-        case 'x':
-            //var rx = mat4( 1.0,  0.0,  0.0, 0.0,
-            //            0.0,  c,  s, 0.0,
-            //            0.0, -s,  c, 0.0,
-            //            0.0,  0.0,  0.0, 1.0 );
-            for(i=0;i<tArr.length;i++){
-                var toOrig = mat4( 1.0, 0.0,  0.0,  -tArr[i][0],
-                            0.0,  1.0,  0.0,  -tArr[i][1],
-                            0.0,  0.0,  1.0,  -tArr[i][2],
-                            0.0,  0.0,  0.0,  1.0);
-                var fromOrig = mat4( 1.0, 0.0,  0.0,  tArr[i][0],
-                            0.0,  1.0,  0.0,  tArr[i][1],
-                            0.0,  0.0,  1.0,  tArr[i][2],
-                            0.0,  0.0,  0.0,  1.0);
-               
-           var rx=rotate(angle,[0,0,1]);
-                tArr[i][0] = dot(tArr[i],rx[0]);
-                tArr[i][1] = dot(tArr[i],rx[1]);
-                tArr[i][2] = dot(tArr[i],rx[2]);
-                bArr[i][0] = dot(bArr[i],rx[0]);
-                bArr[i][1] = dot(bArr[i],rx[1]);
-                bArr[i][2] = dot(bArr[i],rx[2]);
-            
-            }
-            break;
-        case 'y':
-            var ry = mat4( c, 0.0, -s, 0.0,
-                        0.0, 1.0,  0.0, 0.0,
-                        s, 0.0,  c, 0.0,
-                        0.0, 0.0,  0.0, 1.0 );
-            for(i=0;i<tArr.length;i++){
-                tArr[i][0] = dot(tArr[i],ry[0]);
-                tArr[i][1] = dot(tArr[i],ry[1]);
-                tArr[i][2] = dot(tArr[i],ry[2]);
-                bArr[i][0] = dot(bArr[i],ry[0]);
-                bArr[i][1] = dot(bArr[i],ry[1]);
-                bArr[i][2] = dot(bArr[i],ry[2]);
-            }
-            break;
-        case 'z':
-            var rz = mat4( c, s, 0.0, 0.0,
-                        -s,  c, 0.0, 0.0,
-                        0.0,  0.0, 1.0, 0.0,
-                        0.0,  0.0, 0.0, 1.0 );
-            for(i=0;i<tArr.length;i++){
-                tArr[i][0] = dot(tArr[i],rz[0]);
-                tArr[i][1] = dot(tArr[i],rz[1]);
-                tArr[i][2] = dot(tArr[i],rz[2]);
-                bArr[i][0] = dot(bArr[i],rz[0]);
-                bArr[i][1] = dot(bArr[i],rz[1]);
-                bArr[i][2] = dot(bArr[i],rz[2]);
-            }
-            break;
+        t = rotateAround(t,top, 360/(numOfTris-1));
     }
     
-    // draw sides
+        // draw sides
     var j = tArr.length;
     for(var i = 1; i < j; i++){
         sArr.push(tArr[i]);
         sArr.push(bArr[i]);
     }
+
+    
+    // 
+    // rotate cylinder here
+    // rotate, translate to position
+
+    for(i=0;i<tArr.length;i++){
+        tArr[i] = mult(rot,tArr[i]);
+        bArr[i] = mult(rot,bArr[i]);
+//        tArr[i][0] = dot(tArr[i],rot[0]);
+//        tArr[i][1] = dot(tArr[i],rot[1]);
+//        tArr[i][2] = dot(tArr[i],rot[2]);
+//        bArr[i][0] = dot(bArr[i],rot[0]);
+//        bArr[i][1] = dot(bArr[i],rot[1]);
+//        bArr[i][2] = dot(bArr[i],rot[2]);
+//   
+    
+//        tArr[i][0] = dot(tArr[i],fromOrig[0]);
+//        tArr[i][1] = dot(tArr[i],fromOrig[1]);
+//        tArr[i][2] = dot(tArr[i],fromOrig[2]);
+//        bArr[i][0] = dot(bArr[i],fromOrig[0]);
+//        bArr[i][1] = dot(bArr[i],fromOrig[1]);
+//        bArr[i][2] = dot(bArr[i],fromOrig[2]);
+    }   
+
+    
         topArr.push(tArr);
         bottomArr.push(bArr);
         sideArr.push(sArr);
