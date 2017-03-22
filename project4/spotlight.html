@@ -2,14 +2,12 @@
 <html>
 <title>CS435, Project #4, Adam Pluth</title>
 
-<button id = "ButtonX">Rotate X</button>
-<button id = "ButtonY">Rotate Y</button>
-<button id = "ButtonZ">Rotate Z</button>
-<button id = "ButtonT">Toggle Rotation</button>
+<button id = "Button">Toggle Vertex/Fragment processing</button>
 
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute  vec4 vPosition;
+attribute  vec4 VNormal;
 attribute  vec3 vNormal;
 varying vec4 fColor;
 
@@ -18,44 +16,57 @@ uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
 uniform vec4 lightPosition;
 uniform float shininess;
+uniform bool vShader;
+
+varying vec3 N, L, E;
+
 void main()
 {
 
-    
-    vec3 pos = -(modelViewMatrix * vPosition).xyz;
-    
-    //fixed light postion
-    
-    vec3 light = lightPosition.xyz;
-    vec3 L = normalize( light - pos );
+    if(vShader){
+        vec3 pos = -(modelViewMatrix * vPosition).xyz;
 
-	
-    vec3 E = normalize( -pos );
-    vec3 H = normalize( L + E );
-    
-    vec4 NN = vec4(vNormal,0);
+        //fixed light postion
 
-    // Transform vertex normal into eye coordinates
-       
-    vec3 N = normalize( (modelViewMatrix*NN).xyz);
+        vec3 light = lightPosition.xyz;
+        vec3 l = normalize( light - pos );
 
-    // Compute terms in the illumination equation
-    vec4 ambient = ambientProduct;
 
-    float Kd = max( dot(L, N), 0.0 );
-    vec4  diffuse = Kd*diffuseProduct;
+        vec3 e = normalize( -pos );
+        vec3 H = normalize( l + e );
 
-    float Ks = pow( max(dot(N, H), 0.0), shininess );
-    vec4  specular = Ks * specularProduct;
-    
-    if( dot(L, N) < 0.0 ) {
-	specular = vec4(0.0, 0.0, 0.0, 1.0);
-    } 
+        vec4 NN = vec4(vNormal,0);
 
-    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
-    fColor = ambient + diffuse +specular;
-    
-    fColor.a = 1.0;
+        // Transform vertex normal into eye coordinates
+
+        vec3 n = normalize( (modelViewMatrix*NN).xyz);
+
+        // Compute terms in the illumination equation
+        vec4 ambient = ambientProduct;
+
+        float Kd = max( dot(l, n), 0.0 );
+        vec4  diffuse = Kd*diffuseProduct;
+
+        float Ks = pow( max(dot(n, H), 0.0), shininess );
+        vec4  specular = Ks * specularProduct;
+
+        if( dot(l, n) < 0.0 ) {
+            specular = vec4(0.0, 0.0, 0.0, 1.0);
+        } 
+
+        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+        fColor = ambient + diffuse +specular;
+
+        fColor.a = 1.0;
+    }
+    else{
+        vec3 pos = -(modelViewMatrix * vPosition).xyz;
+        vec3 light = lightPosition.xyz;
+        L = normalize(light - pos);
+        E = -pos;
+        N = normalize((modelViewMatrix * VNormal).xyz);
+        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    }
 }
 </script>
 
@@ -65,11 +76,41 @@ precision mediump float;
 
 
 varying vec4 fColor;
+uniform bool VShader;
 
-void
-main()
+
+uniform vec4 AmbientProduct;
+uniform vec4 DiffuseProduct;
+uniform vec4 SpecularProduct;
+uniform float Shininess;
+varying vec3 N, L, E;
+
+void main()
 {
-    gl_FragColor = fColor;
+    if(VShader){
+        gl_FragColor = fColor;
+    }
+    else{
+        vec4 FColor;
+
+        vec3 H = normalize(L + E);
+        vec4 ambient = AmbientProduct;
+
+        float Kd = max(dot(L, N), 0.0);
+        vec4 diffuse = Kd * DiffuseProduct;
+
+        float Ks = pow(max(dot(N, H), 0.0), Shininess);
+        vec4 specular = Ks * SpecularProduct;
+
+        if (dot(L, N) < 0.0) {
+            specular = vec4(0.0, 0.0, 0.0, 1.0);
+        }
+
+        FColor = ambient + diffuse + specular;
+        FColor.a = 1.0;
+
+        gl_FragColor = FColor;
+    }
 }
 </script>
 

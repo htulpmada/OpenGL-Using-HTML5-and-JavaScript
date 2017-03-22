@@ -143,7 +143,7 @@ window.onload = function init() {
     var vNormal = gl.getAttribLocation( program, "vNormal" );
     gl.vertexAttribPointer( vNormal, 3, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vNormal );
-    
+
     var vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW );
@@ -162,9 +162,10 @@ window.onload = function init() {
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
 
-    document.getElementById("Button").onclick = function(){
-        vShader=!vShader;
-    };
+    document.getElementById("ButtonX").onclick = function(){axis = xAxis;};
+    document.getElementById("ButtonY").onclick = function(){axis = yAxis;};
+    document.getElementById("ButtonZ").onclick = function(){axis = zAxis;};
+    document.getElementById("ButtonT").onclick = function(){flag = !flag;};
 
     gl.uniform4fv(gl.getUniformLocation(program, "ambientProduct"),
        flatten(ambientProduct));
@@ -180,8 +181,6 @@ window.onload = function init() {
 
     gl.uniform1f(gl.getUniformLocation(program,
        "vShader"),vShader);
-    gl.uniform1f(gl.getUniformLocation(program,
-       "VShader"),vShader);
 
     gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),
        false, flatten(projection));
@@ -215,10 +214,6 @@ var render = function(){
 
     gl.uniformMatrix4fv( gl.getUniformLocation(program,
             "modelViewMatrix"), false, flatten(modelView) );
-    gl.uniform1f(gl.getUniformLocation(program,
-       "vShader"),vShader);
-    gl.uniform1f(gl.getUniformLocation(program,
-       "VShader"),vShader);
 
     gl.drawArrays( gl.TRIANGLES, 0, 6*Math.pow(4, subDiv)*numFaces);
 
