@@ -44,7 +44,9 @@ var viewerPos;
 var program;
 var vShader = true;
 
-var subDiv = 6;
+var subDiv = 0;
+var subDivH = 0;
+var subDivV = 0;
 var xAxis = 0;
 var yAxis = 1;
 var zAxis = 2;
@@ -162,9 +164,53 @@ window.onload = function init() {
     var diffuseProduct = mult(lightDiffuse, materialDiffuse);
     var specularProduct = mult(lightSpecular, materialSpecular);
 
-    document.getElementById("Button").onclick = function(){
-        vShader=!vShader;
+    document.getElementById("Button1").onclick = function(){
+        vShader = true;
+        subDiv = 0;
+        pointsArray = [];
+        normalsArray = [];
+        init();
     };
+    document.getElementById("Button2").onclick = function(){
+        vShader = true;
+        subDiv = subDivH + subDivV;
+        pointsArray = [];
+        normalsArray = [];
+        init();
+    };
+    document.getElementById("Button3").onclick = function(){
+        vShader=false;
+        subDiv = 0;
+        pointsArray = [];
+        normalsArray = [];
+        init();
+    };
+    document.getElementById("sliderH").onchange = function(event) {
+        subDivH = parseInt(event.target.value);
+    };
+    document.getElementById("sliderV").onchange = function(event) {
+        subDivV = parseInt(event.target.value);
+    };
+    document.addEventListener("keydown", function (event) {
+		// grab keyCode
+                switch(event.keyCode){
+                    case(38)://up
+                        alert("up");
+                        break;
+                    case(40)://down
+                        alert("down");
+                        break;
+                    case(39)://right
+                        alert("right");
+                        break;
+                    case(37)://left
+                        alert("left");
+                        break;
+                        
+                }
+    });
+
+
 
     gl.uniform4fv(gl.getUniformLocation(program, "ambientProduct"),
        flatten(ambientProduct));

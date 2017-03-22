@@ -2,8 +2,9 @@
 <html>
 <title>CS435, Project #4, Adam Pluth</title>
 
-<button id = "Button">Toggle Vertex/Fragment processing</button>
-
+<button id = "Button1">Single & Vertex</button>
+<button id = "Button2">Multi & Vertex</button>
+<button id = "Button3">Single & Fragment</button>
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute  vec4 vPosition;
@@ -120,6 +121,16 @@ void main()
 <script type="text/javascript" src="spotlight.js"></script>
 
 <body>
+<div>
+Height  0 <input id="sliderH" type="range"
+ min= "0" max= "6" step = "1" value = "0" />
+ 6
+</div>
+<div>
+Width   0 <input id="sliderV" type="range"
+ min= "0" max= "6" step = "1" value = "0" />
+ 6
+</div>
 <canvas id="gl-canvas" width="512" height="512">
 Oops ... your browser doesn't support the HTML5 canvas element
 </canvas>
