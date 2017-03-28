@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <title>Adam Pluth, CS 435, Project #5</title>
+<meta charset="utf-8"/>
+<button id = "ButtonNV">Next View</button>
+<button id = "ButtonT">Play/Pause</button>
+<button id = "ButtonN">Next</button>
+<button id = "ButtonP">Prev</button>
+
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute  vec4 vPosition;
+attribute  vec4 vColor;
+attribute  vec2 vTexCoord;
+
+varying vec4 fColor;
+varying vec2 fTexCoord;
+
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+
+
+void main()
+{
+    fColor = vColor;
+    fTexCoord = vTexCoord;
+    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    //gl_Position.z = -gl_Position.z;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+uniform sampler2D u_image0;
+uniform sampler2D u_image1;
+
+varying vec4 fColor;
+varying  vec2 fTexCoord;
+
+uniform sampler2D texture;
+
+void
+main()
+{
+    vec4 color0 = texture2D(u_image0, fTexCoord);
+    vec4 color1 = texture2D(u_image1, fTexCoord);
+    if(gl_FrontFacing){
+        gl_FragColor = color0;
+    }
+    else{
+        gl_FragColor = color1;
+    }
+    
+    //gl_FragColor = texture2D( texture, fTexCoord );
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="texmap.js"></script>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<img id = "texImage" src = "rr.png" hidden></img>
+</body>
+</html>
