@@ -47,7 +47,7 @@ var bottom = -1.0;
 var near = -10;
 var far = 10;
 
-var imagesFiles = ['rr.png','r.png'];
+var imagesFiles = ['rrr.png','r.png'];
 
 var pointsArray = [];
 var colorsArray = [];
@@ -62,12 +62,12 @@ var texCoord = [
 
 var vertices = [
         vec4( -0.5, -0.5,  0.5, 1.0 ),
-        vec4( -0.5,  0.5,  0.5, 1.0 ),
-        vec4( 0.5,  0.5,  0.5, 1.0 ),
+        vec4( -0.5,  0.25,  0.5, 1.0 ),
+        vec4( 0.5,  0.25,  0.5, 1.0 ),
         vec4( 0.5, -0.5,  0.5, 1.0 ),
         vec4( -0.5, -0.5, -0.5, 1.0 ),
-        vec4( -0.5,  0.5, -0.5, 1.0 ),
-        vec4( 0.5,  0.5, -0.5, 1.0 ),
+        vec4( -0.5,  0.25, -0.5, 1.0 ),
+        vec4( 0.5,  0.25, -0.5, 1.0 ),
         vec4( 0.5, -0.5, -0.5, 1.0 )
     ];
 
@@ -96,8 +96,8 @@ var flag = true;
 
 function loadImage(url, callback) {
     var image = new Image();
-    image.src = url;
     image.onload = callback;
+    image.src = url;
     return image;
 }
 
@@ -110,12 +110,14 @@ function loadImages(urls, callback) {
       --imagesToLoad;
       // If all the images are loaded call the callback.
       if (imagesToLoad == 0) {
-        callback(images);
+        configureTexture(images)
+        callback();
       }
     };
 
     for (var ii = 0; ii < imagesToLoad; ++ii) {
       var image = loadImage(urls[ii], onImageLoad);
+      image.crossOrigin = 'anonymous';
       images.push(image);
     }
 }
@@ -123,6 +125,7 @@ function loadImages(urls, callback) {
 function configureTexture( images ) {
     var textures = [];
     for(var ii = 0; ii < images.length; ++ii){
+        //gl.activeTexture(gl.TEXTURE0);
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -149,20 +152,8 @@ function configureTexture( images ) {
     gl.bindTexture(gl.TEXTURE_2D, textures[0]);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-
-
-/*    var texture = gl.createTexture();
-    gl.bindTexture( gl.TEXTURE_2D, texture );
-    //gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGB,
-         gl.RGB, gl.UNSIGNED_BYTE, image );
-    gl.generateMipmap( gl.TEXTURE_2D );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
-                      gl.NEAREST_MIPMAP_LINEAR );
-    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
-
-    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
-*/
+    
+//    render();
 }
 
 
@@ -193,6 +184,33 @@ function quad(a, b, c, d) {
      texCoordsArray.push(texCoord[3]);
 }
 
+function quadt(a, b, c, d, e) {
+
+    pointsArray.push(vertices[e*a]);
+     colorsArray.push(vertexColors[a]);
+     texCoordsArray.push(texCoord[0]);
+
+     pointsArray.push(vertices[e*b]);
+     colorsArray.push(vertexColors[a]);
+     texCoordsArray.push(texCoord[1]);
+
+     pointsArray.push(vertices[e*c]);
+     colorsArray.push(vertexColors[a]);
+     texCoordsArray.push(texCoord[2]);
+
+     pointsArray.push(vertices[e*a]);
+     colorsArray.push(vertexColors[a]);
+     texCoordsArray.push(texCoord[0]);
+
+     pointsArray.push(vertices[e*c]);
+     colorsArray.push(vertexColors[a]);
+     texCoordsArray.push(texCoord[2]);
+
+     pointsArray.push(vertices[e*d]);
+     colorsArray.push(vertexColors[a]);
+     texCoordsArray.push(texCoord[3]);
+}
+
 
 function colorCube()
 {
@@ -202,6 +220,38 @@ function colorCube()
 //    quad( 6, 5, 1, 2 );//top
     quad( 6, 7, 4, 5 );//back
     quad( 5, 4, 0, 1 );//left
+}
+
+function table()
+{
+    // first leg
+    quadt( 1, 0, 3, 2 ,1);//front
+    quadt( 2, 3, 7, 6 ,1);//right
+    quadt( 3, 0, 4, 7 ,1);//bottom
+    quadt( 6, 5, 1, 2 ,1);//top
+    quadt( 6, 7, 4, 5 ,1);//back
+    quadt( 5, 4, 0, 1 ,1);//left
+    // second leg
+    quadt( 1, 0, 3, 2 ,2);//front
+    quadt( 2, 3, 7, 6 ,2);//right
+    quadt( 3, 0, 4, 7 ,2);//bottom
+    quadt( 6, 5, 1, 2 ,2);//top
+    quadt( 6, 7, 4, 5 ,2);//back
+    quadt( 5, 4, 0, 1 ,2);//left
+    // third leg
+    quadt( 1, 0, 3, 2 ,3);//front
+    quadt( 2, 3, 7, 6 ,3);//right
+    quadt( 3, 0, 4, 7 ,3);//bottom
+    quadt( 6, 5, 1, 2 ,3);//top
+    quadt( 6, 7, 4, 5 ,3);//back
+    quadt( 5, 4, 0, 1 ,3);//left
+    // fourth leg
+    quadt( 1, 0, 3, 2 ,4);//front
+    quadt( 2, 3, 7, 6 ,4);//right
+    quadt( 3, 0, 4, 7 ,4);//bottom
+    quadt( 6, 5, 1, 2 ,4);//top
+    quadt( 6, 7, 4, 5 ,4);//back
+    quadt( 5, 4, 0, 1 ,4);//left
 }
 
 
@@ -224,6 +274,7 @@ window.onload = function init() {
     gl.useProgram( program );
 
     colorCube();
+//    table()
 
     var cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
@@ -264,9 +315,9 @@ window.onload = function init() {
     document.getElementById("ButtonN").onclick = function(){};
     document.getElementById("ButtonP").onclick = function(){};
     
-    loadImages(imagesFiles,configureTexture);
+    loadImages(imagesFiles,render);
     
-    render();
+//    render();
 }
 
 var render = function(){
