@@ -21,10 +21,11 @@ var texSize = 64;
 
 var modelView, projection;
 
-var eyes = [    vec3(-0.2,0.5,1.0),//front
-                vec3(-1.0,0.5,-0.2),//left
-                vec3(0.2,0.5,-1.0),//back
-                vec3(1.0,0.5,0.2)//right
+var eyes = [    
+                vec3(-0.2,0.25,0.5),//front
+                vec3(-0.5,0.25,-0.2),//left
+                vec3(0.2,0.25,-0.5),//back
+                vec3(0.5,0.25,0.2)//right
 ];
 var curEye = 0;
 var eye = eyes[curEye];
@@ -47,11 +48,13 @@ var bottom = -1.0;
 var near = -10;
 var far = 10;
 
-var imagesFiles = ['rrr.png','r.png'];
+var imagesFiles = ['rrr.png','r.png','rr.png'];
 
 var pointsArray = [];
 var colorsArray = [];
 var texCoordsArray = [];
+var picBoolArray = [];
+var woodBoolArray = [];
 
 var texCoord = [
     vec2(0, 0),
@@ -61,6 +64,8 @@ var texCoord = [
 ];
 
 var vertices = [
+        // walls
+        //      x     y     z
         vec4( -0.5, -0.5,  0.5, 1.0 ),
         vec4( -0.5,  0.25,  0.5, 1.0 ),
         vec4( 0.5,  0.25,  0.5, 1.0 ),
@@ -68,8 +73,27 @@ var vertices = [
         vec4( -0.5, -0.5, -0.5, 1.0 ),
         vec4( -0.5,  0.25, -0.5, 1.0 ),
         vec4( 0.5,  0.25, -0.5, 1.0 ),
-        vec4( 0.5, -0.5, -0.5, 1.0 )
+        vec4( 0.5, -0.5, -0.5, 1.0 ),
+        
+        //table top
+        vec4( -0.05, -0.41,  0.05, 1.0 ),
+        vec4( -0.05, -0.40,  0.05, 1.0 ),
+        vec4( 0.05,  -0.40,  0.05, 1.0 ),
+        vec4( 0.05, -0.41,  0.05, 1.0 ),
+        vec4( -0.05, -0.41, -0.05, 1.0 ),
+        vec4( -0.05, -0.40, -0.05, 1.0 ),
+        vec4( 0.05, -0.40, -0.05, 1.0 ),
+        vec4( 0.05, -0.41, -0.05, 1.0 )
+        
+        
+        //table legs
+        
+        //picture frames
+        
     ];
+
+var wtrue = vec4( 0.0, 0.0, 0.0, 1.0 );  // black
+var wfalse = vec4( 0.0, 0.0, 0.0, 0.0 );  // black
 
 var vertexColors = [
     vec4( 0.0, 0.0, 0.0, 1.0 ),  // black
@@ -86,7 +110,7 @@ var ctm;
 var modelView, projection;
 var viewerPos;
 var program;
-
+var vPosition;
 var xAxis = 0;
 var yAxis = 1;
 var zAxis = 2;
@@ -125,7 +149,7 @@ function loadImages(urls, callback) {
 function configureTexture( images ) {
     var textures = [];
     for(var ii = 0; ii < images.length; ++ii){
-        //gl.activeTexture(gl.TEXTURE0);
+        gl.activeTexture(gl.TEXTURE0 + ii);
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -144,14 +168,18 @@ function configureTexture( images ) {
 
     var u_image0Location = gl.getUniformLocation(program, "u_image0");
     var u_image1Location = gl.getUniformLocation(program, "u_image1");
+    var u_image2Location = gl.getUniformLocation(program, "u_image2");
 
     gl.uniform1i(u_image0Location, 0);  // texture unit 0
     gl.uniform1i(u_image1Location, 1);  // texture unit 1
+    gl.uniform1i(u_image1Location, 2);  // texture unit 1
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textures[0]);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, textures[2]);
     
 //    render();
 }
@@ -159,7 +187,7 @@ function configureTexture( images ) {
 
 function quad(a, b, c, d) {
 
-    pointsArray.push(vertices[a]);
+     pointsArray.push(vertices[a]);
      colorsArray.push(vertexColors[a]);
      texCoordsArray.push(texCoord[0]);
 
@@ -185,28 +213,28 @@ function quad(a, b, c, d) {
 }
 
 function quadt(a, b, c, d, e) {
-
-    pointsArray.push(vertices[e*a]);
+//     e++;
+     pointsArray.push(vertices[(e*8)+a]);
      colorsArray.push(vertexColors[a]);
      texCoordsArray.push(texCoord[0]);
 
-     pointsArray.push(vertices[e*b]);
+     pointsArray.push(vertices[(e*8)+b]);
      colorsArray.push(vertexColors[a]);
      texCoordsArray.push(texCoord[1]);
 
-     pointsArray.push(vertices[e*c]);
+     pointsArray.push(vertices[(e*8)+c]);
      colorsArray.push(vertexColors[a]);
      texCoordsArray.push(texCoord[2]);
 
-     pointsArray.push(vertices[e*a]);
+     pointsArray.push(vertices[(e*8)+a]);
      colorsArray.push(vertexColors[a]);
      texCoordsArray.push(texCoord[0]);
 
-     pointsArray.push(vertices[e*c]);
+     pointsArray.push(vertices[(e*8)+c]);
      colorsArray.push(vertexColors[a]);
      texCoordsArray.push(texCoord[2]);
 
-     pointsArray.push(vertices[e*d]);
+     pointsArray.push(vertices[(e*8)+d]);
      colorsArray.push(vertexColors[a]);
      texCoordsArray.push(texCoord[3]);
 }
@@ -224,8 +252,15 @@ function colorCube()
 
 function table()
 {
-    // first leg
+    // table top
     quadt( 1, 0, 3, 2 ,1);//front
+    quadt( 2, 3, 7, 6 ,1);//right
+    quadt( 3, 0, 4, 7 ,1);//bottom
+    quadt( 6, 5, 1, 2 ,1);//top
+    quadt( 6, 7, 4, 5 ,1);//back
+    quadt( 5, 4, 0, 1 ,1);//left
+    // first leg
+/*    quadt( 1, 0, 3, 2 ,1);//front
     quadt( 2, 3, 7, 6 ,1);//right
     quadt( 3, 0, 4, 7 ,1);//bottom
     quadt( 6, 5, 1, 2 ,1);//top
@@ -252,6 +287,7 @@ function table()
     quadt( 6, 5, 1, 2 ,4);//top
     quadt( 6, 7, 4, 5 ,4);//back
     quadt( 5, 4, 0, 1 ,4);//left
+     */
 }
 
 
@@ -274,7 +310,7 @@ window.onload = function init() {
     gl.useProgram( program );
 
     colorCube();
-//    table()
+    table()
 
     var cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
@@ -288,7 +324,7 @@ window.onload = function init() {
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW);
     
-    var vPosition = gl.getAttribLocation( program, "vPosition" );
+    vPosition = gl.getAttribLocation( program, "vPosition" );
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
@@ -299,16 +335,7 @@ window.onload = function init() {
     var vTexCoord = gl.getAttribLocation( program, "vTexCoord");
     gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vTexCoord);
-    
-    //var image = new Image();
-    //image.onload = function() {
-    //    configureTexture( image );
-    //}
-    //image.src = "rr.png"
 
-    //viewerPos = vec3(0.0, 0.0, -20.0 );
-
-    //projection = ortho(-1, 1, -1, 1, -100, 100);
 
     document.getElementById("ButtonNV").onclick = function(){curEye++;theta[axis]=0;};
     document.getElementById("ButtonT").onclick = function(){flag = !flag;};
@@ -341,7 +368,8 @@ var render = function(){
     gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),
        false, flatten(projection));
 
-    gl.drawArrays( gl.TRIANGLES, 0, numVertices );
+    gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
+
 
 
     requestAnimFrame(render);
