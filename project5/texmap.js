@@ -18,9 +18,10 @@ var gl;
 
 var numVertices  = 6 * 4;
 var texSize = 64;
+var vBuffer;
 
 var modelView, projection;
-
+var textures;
 var eyes = [    
                 vec3(-0.2,0.25,0.5),//front
                 vec3(-0.5,0.25,-0.2),//left
@@ -52,6 +53,7 @@ var imagesFiles = ['rrr.png','r.png','rr.png'];
 
 var pointsArray = [];
 var colorsArray = [];
+var tableArray = [];
 var texCoordsArray = [];
 var picBoolArray = [];
 var woodBoolArray = [];
@@ -147,7 +149,7 @@ function loadImages(urls, callback) {
 }
 
 function configureTexture( images ) {
-    var textures = [];
+    textures = [];
     for(var ii = 0; ii < images.length; ++ii){
         gl.activeTexture(gl.TEXTURE0 + ii);
         var texture = gl.createTexture();
@@ -174,12 +176,6 @@ function configureTexture( images ) {
     gl.uniform1i(u_image1Location, 1);  // texture unit 1
     gl.uniform1i(u_image1Location, 2);  // texture unit 1
 
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, textures[0]);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-    gl.activeTexture(gl.TEXTURE2);
-    gl.bindTexture(gl.TEXTURE_2D, textures[2]);
     
 //    render();
 }
@@ -214,28 +210,22 @@ function quad(a, b, c, d) {
 
 function quadt(a, b, c, d, e) {
 //     e++;
-     pointsArray.push(vertices[(e*8)+a]);
-     colorsArray.push(vertexColors[a]);
+     tableArray.push(vertices[(e*8)+a]);
      texCoordsArray.push(texCoord[0]);
 
-     pointsArray.push(vertices[(e*8)+b]);
-     colorsArray.push(vertexColors[a]);
+     tableArray.push(vertices[(e*8)+b]);
      texCoordsArray.push(texCoord[1]);
 
-     pointsArray.push(vertices[(e*8)+c]);
-     colorsArray.push(vertexColors[a]);
+     tableArray.push(vertices[(e*8)+c]);
      texCoordsArray.push(texCoord[2]);
 
-     pointsArray.push(vertices[(e*8)+a]);
-     colorsArray.push(vertexColors[a]);
+     tableArray.push(vertices[(e*8)+a]);
      texCoordsArray.push(texCoord[0]);
 
-     pointsArray.push(vertices[(e*8)+c]);
-     colorsArray.push(vertexColors[a]);
+     tableArray.push(vertices[(e*8)+c]);
      texCoordsArray.push(texCoord[2]);
 
-     pointsArray.push(vertices[(e*8)+d]);
-     colorsArray.push(vertexColors[a]);
+     tableArray.push(vertices[(e*8)+d]);
      texCoordsArray.push(texCoord[3]);
 }
 
@@ -244,10 +234,10 @@ function colorCube()
 {
 //    quad( 1, 0, 3, 2 );//front
     quad( 2, 3, 7, 6 );//right
-    quad( 3, 0, 4, 7 );//bottom
 //    quad( 6, 5, 1, 2 );//top
     quad( 6, 7, 4, 5 );//back
     quad( 5, 4, 0, 1 );//left
+    quad( 3, 0, 4, 7 );//bottom
 }
 
 function table()
@@ -320,7 +310,7 @@ window.onload = function init() {
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor );
 
-    var vBuffer = gl.createBuffer();
+    vBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW);
     
@@ -368,7 +358,24 @@ var render = function(){
     gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),
        false, flatten(projection));
 
-    gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
+    var u_image0Location = gl.getUniformLocation(program, "u_image0");
+    var u_image1Location = gl.getUniformLocation(program, "u_image1");
+    var u_image2Location = gl.getUniformLocation(program, "u_image2");
+
+    gl.uniform1i(u_image0Location, 0);  // texture unit 0
+    gl.uniform1i(u_image1Location, 1);  // texture unit 1
+    gl.uniform1i(u_image1Location, 2);  // texture unit 1
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW);
+    gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length-6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[2]);
+    gl.drawArrays( gl.TRIANGLES, pointsArray.length-6,6 );
+
+    gl.bindBuffer( gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData( gl.ARRAY_BUFFER, flatten(tableArray), gl.STATIC_DRAW);
+    gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+    gl.drawArrays( gl.TRIANGLES, 0, tableArray.length );
 
 
 
