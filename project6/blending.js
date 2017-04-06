@@ -38,14 +38,14 @@ var texCoord = [
 var vertices = [
         // walls
         //      x     y  
-        vec3( -0.05, -0.05, 1.0 ),
-        vec3( -0.05,  0.05, 1.0 ),
-        vec3( 0.05,  0.05, 1.0 ),
-        vec3( 0.05, -0.05, 1.0 ),
-        vec3( -0.05, -0.05, 1.0 ),
-        vec3( -0.05,  0.05, 1.0 ),
-        vec3( 0.05,  0.05, 1.0 ),
-        vec3( 0.05, -0.05, 1.0 ),
+        vec2( -0.05, -0.05),
+        vec2( -0.05,  0.05),
+        vec2( 0.05,  0.05),
+        vec2( 0.05, -0.05),
+        vec2( -0.05, -0.05),
+        vec2( -0.05,  0.05),
+        vec2( 0.05,  0.05),
+        vec2( 0.05, -0.05),
                 
     ];
 
@@ -164,7 +164,7 @@ window.onload = function init() {
     gl.bufferData( gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW);
     
     var vPosition = gl.getAttribLocation( program, "vPosition" );
-    gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer( vPosition, 2, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vPosition);
 
     var tBuffer = gl.createBuffer();
@@ -178,7 +178,7 @@ window.onload = function init() {
 
     canvas.onclick = function(){};
     
-    loadImages(imagesFiles,render);
+  //  loadImages(imagesFiles,render);
     
     render();
 }
@@ -197,7 +197,7 @@ var render = function(){
 
     
     // loop for top row
-    gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+//    gl.bindTexture(gl.TEXTURE_2D, textures[0]);
     gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
 
     // loop for bottom row
@@ -207,6 +207,7 @@ var render = function(){
     // draw active belnd
     //gl.bindTexture(gl.TEXTURE_2D, textures[1]);
     //gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
-
+    
+    // we should render on click
     requestAnimFrame(render);
 }
