@@ -20,10 +20,19 @@ var numVertices  = 6 * 4;
 var texSize = 64;
 
 var textures;
+var picChoice = 0;
+var frameChoice = 0;
 
 
-
-var imagesFiles = ['rrr'];
+var imagesFiles = [ 'r',
+                    'rr',
+                    'rrr',
+                    'rrrr',
+                    'rrrrr',
+                    'rrrrrr',
+                    'rrrrrrr',
+                    'rrrrrrrr'
+                ];
 
 var pointsArray = [];
 var texCoordsArray = [];
@@ -36,17 +45,56 @@ var texCoord = [
 ];
 
 var vertices = [
-        // walls
         //      x     y  
-        vec2( -0.5, -0.5),
-        vec2( -0.5,  0.5),
-        vec2( 0.5,  0.5),
-        vec2( 0.5, -0.5),
-        vec2( -0.5, -0.5),
-        vec2( -0.5,  0.5),
-        vec2( 0.5,  0.5),
-        vec2( 0.5, -0.5),
-                
+        // top row 1
+        vec2( -1.0, 0.4),
+        vec2( -1.0, 0.8),
+        vec2( -0.5, 0.8),
+        vec2( -0.5, 0.4),
+        // top row 2
+        vec2( -0.5, 0.4),
+        vec2( -0.5, 0.8),
+        vec2(  0.0, 0.8),
+        vec2(  0.0, 0.4),
+        // top row 3
+        vec2(  0.0, 0.4),
+        vec2(  0.0, 0.8),
+        vec2(  0.5, 0.8),
+        vec2(  0.5, 0.4),
+        // top row 4
+        vec2(  0.5, 0.4),
+        vec2(  0.5, 0.8),
+        vec2(  1.0, 0.8),
+        vec2(  1.0, 0.4),
+
+        // bottom row 1
+        vec2( -1.0, -0.8),
+        vec2( -1.0, -0.4),
+        vec2( -0.5, -0.4),
+        vec2( -0.5, -0.8),
+        // bottom row 2
+        vec2( -0.5, -0.8),
+        vec2( -0.5, -0.4),
+        vec2(  0.0, -0.4),
+        vec2(  0.0, -0.8),
+        // bottom row 3
+        vec2(  0.0, -0.8),
+        vec2(  0.0, -0.4),
+        vec2(  0.5, -0.4),
+        vec2(  0.5, -0.8),
+        // bottom row 4
+        vec2(  0.5, -0.8),
+        vec2(  0.5, -0.4),
+        vec2(  1.0, -0.4),
+        vec2(  1.0, -0.8),
+
+
+        // active blend
+        vec2( -0.25, -0.2),
+        vec2( -0.25,  0.2),
+        vec2(  0.25,  0.2),
+        vec2(  0.25, -0.2),
+
     ];
 
 
@@ -75,24 +123,25 @@ function loadImages(urls) {
 
 function configureTexture( images ) {
     textures = [];
-
+    
+    for(var i = 0; i < images.length; i++){
 //    gl.activeTexture(gl.TEXTURE0);
-    var texture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+//        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-    // Set the parameters so we can render any size image.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        // Set the parameters so we can render any size image.
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-    // Upload the image into the texture.
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[0]);
+        // Upload the image into the texture.
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[i]);
 
-    // add the texture to the array of textures.
-    textures.push(texture);
-
+        // add the texture to the array of textures.
+        textures.push(texture);
+        }
 }
 
 
@@ -121,19 +170,19 @@ function quad(a, b, c, d) {
 function makeCube()
 {
     // top row
-    quad( 1, 0, 3, 2 );//front
-    //quad( 1, 0, 3, 2 );//front
-    //quad( 1, 0, 3, 2 );//front
-    //quad( 1, 0, 3, 2 );//front
+    quad( 1, 0, 3, 2 );
+    quad( 5, 4, 7, 6 );
+    quad( 9, 8, 11, 10 );
+    quad( 13, 12, 15, 14 );
 
     // bottom row
-    //quad( 1, 0, 3, 2 );//front
-    //quad( 1, 0, 3, 2 );//front
-    //quad( 1, 0, 3, 2 );//front
-    //quad( 1, 0, 3, 2 );//front
+    quad( 17, 16, 19, 18 );//front
+    quad( 21, 20, 23, 22 );//front
+    quad( 25, 24, 27, 26 );//front
+    quad( 29, 28, 31, 30 );//front
 
     // active blend
-    //quad( 1, 0, 3, 2 );//front
+    quad( 33, 32, 35, 34 );//front
 
 }
 
@@ -176,7 +225,9 @@ window.onload = function init() {
     gl.enableVertexAttribArray(vTexCoord);
 
 
-    canvas.onclick = function(){};
+    canvas.onclick = function(){
+        getPoint();
+    };
     
     loadImages(imagesFiles,render);
     
@@ -196,9 +247,32 @@ var render = function(){
 //    gl.uniform1i(u_image1Location, 1);  // texture unit 1
 
     
-    // loop for top row
+    // top row
     gl.bindTexture(gl.TEXTURE_2D, textures[0]);
-    gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
+    gl.drawArrays( gl.TRIANGLES, 0*6, 6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+    gl.drawArrays( gl.TRIANGLES, 1*6, 6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[2]);
+    gl.drawArrays( gl.TRIANGLES, 2*6, 6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[3]);
+    gl.drawArrays( gl.TRIANGLES, 3*6, 6 );
+
+    // bottom row
+    gl.bindTexture(gl.TEXTURE_2D, textures[4]);
+    gl.drawArrays( gl.TRIANGLES, 4*6, 6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[5]);
+    gl.drawArrays( gl.TRIANGLES, 5*6, 6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[6]);
+    gl.drawArrays( gl.TRIANGLES, 6*6, 6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[7]);
+    gl.drawArrays( gl.TRIANGLES, 7*6, 6 );
+
+    // active blend
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, textures[picChoice]);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, textures[frameChoice]);
+    gl.drawArrays( gl.TRIANGLES, 8*6, 6 );
 
     // loop for bottom row
     //gl.bindTexture(gl.TEXTURE_2D, textures[2]);
