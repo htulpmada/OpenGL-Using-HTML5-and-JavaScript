@@ -38,14 +38,14 @@ var texCoord = [
 var vertices = [
         // walls
         //      x     y  
-        vec2( -0.05, -0.05),
-        vec2( -0.05,  0.05),
-        vec2( 0.05,  0.05),
-        vec2( 0.05, -0.05),
-        vec2( -0.05, -0.05),
-        vec2( -0.05,  0.05),
-        vec2( 0.05,  0.05),
-        vec2( 0.05, -0.05),
+        vec2( -0.5, -0.5),
+        vec2( -0.5,  0.5),
+        vec2( 0.5,  0.5),
+        vec2( 0.5, -0.5),
+        vec2( -0.5, -0.5),
+        vec2( -0.5,  0.5),
+        vec2( 0.5,  0.5),
+        vec2( 0.5, -0.5),
                 
     ];
 
@@ -178,7 +178,7 @@ window.onload = function init() {
 
     canvas.onclick = function(){};
     
-  //  loadImages(imagesFiles,render);
+    loadImages(imagesFiles,render);
     
     render();
 }
@@ -197,7 +197,7 @@ var render = function(){
 
     
     // loop for top row
-//    gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+    gl.bindTexture(gl.TEXTURE_2D, textures[0]);
     gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
 
     // loop for bottom row
@@ -209,5 +209,5 @@ var render = function(){
     //gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
     
     // we should render on click
-    requestAnimFrame(render);
+    //requestAnimFrame(render);
 }

@@ -29,10 +29,10 @@ varying  vec2 fTexCoord;
 void
 main()
 {
-    //vec4 color0 = texture2D(u_image0, fTexCoord);
+    vec4 color0 = texture2D(u_image0, fTexCoord);
     //vec4 color1 = texture2D(u_image1, fTexCoord);
-    // gl_FragColor = color0;// * color1;
-    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+     gl_FragColor = color0;// * color1;
+    //gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
 
 
 }
