@@ -21,7 +21,7 @@ var texSize = 64;
 
 var textures;
 var picChoice = 0;
-var frameChoice = 0;
+var frameChoice = 4;
 
 
 var imagesFiles = [ 'r',
@@ -90,6 +90,12 @@ var vertices = [
 
 
         // active blend
+        //
+        vec2( -0.25, -0.2),
+        vec2( -0.25,  0.2),
+        vec2(  0.25,  0.2),
+        vec2(  0.25, -0.2),
+        //picture frame
         vec2( -0.25, -0.2),
         vec2( -0.25,  0.2),
         vec2(  0.25,  0.2),
@@ -176,14 +182,26 @@ function makeCube()
     quad( 13, 12, 15, 14 );
 
     // bottom row
-    quad( 17, 16, 19, 18 );//front
-    quad( 21, 20, 23, 22 );//front
-    quad( 25, 24, 27, 26 );//front
-    quad( 29, 28, 31, 30 );//front
+    quad( 17, 16, 19, 18 );
+    quad( 21, 20, 23, 22 );
+    quad( 25, 24, 27, 26 );
+    quad( 29, 28, 31, 30 );
 
     // active blend
-    quad( 33, 32, 35, 34 );//front
+    quad( 33, 32, 35, 34 );
+    quad( 37, 36, 39, 38 );
 
+}
+
+function getPoint(event){   
+    // offset canvas
+    var x = event.pageX - canvas.offsetLeft;
+    var y = event.pageY - canvas.offsetTop;
+    return vec2(2 * x / canvas.width - 1, 2 * (canvas.height - y) / canvas.height - 1);
+
+    //VVVVVVVVVV doesnt take offset into account VVVVVVVVVVV DON'T USE!!!
+    //return vec2(2 * event.clientX / canvas.width - 1,
+	//	2 * (canvas.height - event.clientY) / canvas.height - 1);
 }
 
 
@@ -225,63 +243,62 @@ window.onload = function init() {
     gl.enableVertexAttribArray(vTexCoord);
 
 
-    canvas.onclick = function(){
-        getPoint();
-    };
+    canvas.addEventListener("mousedown", function(event){
+        var t = getPoint(event);
+        
+        // test for   top  row
+        if(t[1] > 0.4 && t[1] < 0.8){
+            //alert("top row");
+            // test for which president form left to right
+            if(t[0] > -1.0 && t[0] < -0.5){picChoice = 0;}//alert("Wash");}//washington
+            else if(t[0] > -0.5 && t[0] < 0.0){picChoice = 1;}//alert("Adams");}//adams
+            else if(t[0] > 0.0 && t[0] < 0.5){picChoice = 2;}//alert("JEFF");}//jefferson
+            else if(t[0] > 0.5 && t[0] < 1.0){picChoice = 3;}//alert("MAD");}//madison
+            else{return;}//nobody probably wont ever hit this
+        }
+        // test for bottom row
+        else if(t[1] < -.4 && t[1] > -.8){
+            //alert("bottom row");
+            // test for which picture frame form left to right
+            if(t[0] > -1.0 && t[0] < -0.5){frameChoice = 4;}//alert("gold circle");}//gold circle
+            else if(t[0] > -0.5 && t[0] < 0.0){frameChoice = 5;}//alert("gold square");}//gold square
+            else if(t[0] > 0.0 && t[0] < 0.5){frameChoice = 6;}//alert("clouds");}//clouds
+            else if(t[0] > 0.5 && t[0] < 1.0){frameChoice = 7;}//alert("waves");}//waves
+            else{return;}//nobody probably wont ever hit this
+        }
+        // outside of range
+        else{return;}
+    render(picChoice,frameChoice);
+    });    
     
     loadImages(imagesFiles,render);
     
-    render();
-}
+    render(picChoice,frameChoice);
+};
 
-var render = function(){
+var render = function(pchoice,fchoice){
 
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-//    var u_image0Location = gl.getUniformLocation(program, "u_image0");
-//    var u_image1Location = gl.getUniformLocation(program, "u_image1");
-    
-    // pic image to display here
-    
-//    gl.uniform1i(u_image0Location, 0);  // texture unit 0
-//    gl.uniform1i(u_image1Location, 1);  // texture unit 1
+    // active blend
+    gl.enable(gl.DEPTH_TEST);
+    gl.depthFunc(gl.LEQUAL);
+//    gl.enable(gl.POLYGON_OFFSET_FILL);
+//    gl.polygonOffset(1.0, 2.0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+//    gl.depthMask(false);
 
-    
-    // top row
-    gl.bindTexture(gl.TEXTURE_2D, textures[0]);
-    gl.drawArrays( gl.TRIANGLES, 0*6, 6 );
-    gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-    gl.drawArrays( gl.TRIANGLES, 1*6, 6 );
-    gl.bindTexture(gl.TEXTURE_2D, textures[2]);
-    gl.drawArrays( gl.TRIANGLES, 2*6, 6 );
-    gl.bindTexture(gl.TEXTURE_2D, textures[3]);
-    gl.drawArrays( gl.TRIANGLES, 3*6, 6 );
-
-    // bottom row
-    gl.bindTexture(gl.TEXTURE_2D, textures[4]);
-    gl.drawArrays( gl.TRIANGLES, 4*6, 6 );
-    gl.bindTexture(gl.TEXTURE_2D, textures[5]);
-    gl.drawArrays( gl.TRIANGLES, 5*6, 6 );
-    gl.bindTexture(gl.TEXTURE_2D, textures[6]);
-    gl.drawArrays( gl.TRIANGLES, 6*6, 6 );
-    gl.bindTexture(gl.TEXTURE_2D, textures[7]);
-    gl.drawArrays( gl.TRIANGLES, 7*6, 6 );
+    for (var i = 0; i < 8; i++){
+        gl.bindTexture(gl.TEXTURE_2D, textures[i]);
+        gl.drawArrays( gl.TRIANGLES, i*6, 6 );
+    }
 
     // active blend
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, textures[picChoice]);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, textures[frameChoice]);
+    gl.bindTexture(gl.TEXTURE_2D, textures[pchoice]);
     gl.drawArrays( gl.TRIANGLES, 8*6, 6 );
+    gl.bindTexture(gl.TEXTURE_2D, textures[fchoice]);
+    gl.drawArrays( gl.TRIANGLES, 9*6, 6 );
+    gl.activeTexture(gl.TEXTURE0);
 
-    // loop for bottom row
-    //gl.bindTexture(gl.TEXTURE_2D, textures[2]);
-    //gl.drawArrays( gl.TRIANGLES, pointsArray.length,6 );
-    
-    // draw active belnd
-    //gl.bindTexture(gl.TEXTURE_2D, textures[1]);
-    //gl.drawArrays( gl.TRIANGLES, 0, pointsArray.length );
-    
-    // we should render on click
-    //requestAnimFrame(render);
 }
