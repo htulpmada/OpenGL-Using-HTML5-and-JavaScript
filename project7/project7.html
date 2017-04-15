@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <title>Adam Pluth, CS 435, Project #7</title>
+<meta charset="utf-8"/>
+
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute  vec4 vPosition;
+attribute  vec4 vColor;
+
+varying vec4 fColor;
+
+void main()
+{
+    fColor = vColor;
+    gl_Position = vPosition;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+varying  vec4 fColor;
+
+void
+main()
+{
+     gl_FragColor = fColor;
+    
+
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/initShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="project7.js"></script>
+
+<body>
+<canvas id="gl-canvas" width="512" height="512">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+<img id = "rrrrrrrr" src = "4.png" hidden></img>
+<img id = "rrrrrrr" src = "3.png" hidden></img>
+<img id = "rrrrrr" src = "2.png" hidden></img>
+<img id = "rrrrr" src = "1.png" hidden></img>
+<img id = "rrrr" src = "pres4.png" hidden></img>
+<img id = "rrr" src = "pres3.png" hidden></img>
+<img id = "rr" src = "pres2.png" hidden></img>
+<img id = "r" src = "pres1.png" hidden></img>
+</body>
+</html>
